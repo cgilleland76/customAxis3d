@@ -18,9 +18,10 @@ database. No framework, no npm install, no build step.
 | `shop.html` | **Ready-made catalog.** Photo grid, category filters, search, sort, lightbox, add-to-list |
 | `custom.html` | **Custom configurator.** Live SVG preview for initial-with-name signs, name plates, keychains, door signs, word art. Ballpark price from your real rates |
 | `idea.html` | **AI idea modeler.** Free-text description → structured build spec sheet + reference images + the exact generation prompt. Printable, emailable |
-| `quote.html` | **Instant quote.** Drop a sliced `.3mf` or `.gcode`, get filament / time / power / price. Same math as your `print-cost-calculator.html` |
+| `quote.html` | **Job costing — owner only.** Drop a sliced `.3mf` or `.gcode` for filament / time / power / cost / price, then record what the print actually took and see the variance. Never linked publicly |
 | `list.html` | The order list. Not a cart — it prints, emails, or gets shown on a phone |
-| `admin.html` | Owner tools: incoming requests, catalog editor, rates, quote history, backup |
+| `admin.html` | Owner tools: incoming requests, catalog editor, pricing, jobs, backup |
+| `setup.html` | Storage setup wizard |
 
 ---
 
@@ -64,23 +65,64 @@ geometric placeholder so the grid never looks broken.
 
 ## Deploy to Netlify
 
-1. Push this folder to a GitHub repo.
-2. Netlify → **Add new site → Import an existing project** → pick the repo.
-3. Build command: *(leave empty)*. Publish directory: `.`
-4. Deploy.
+### Fastest: drag and drop
 
-`netlify.toml` is already set up with pretty URLs (`/shop`, `/quote`, …), security
-headers, and cache rules.
+Zip the contents of this folder (contents at the root, not the folder itself)
+and drop it on [app.netlify.com/drop](https://app.netlify.com/drop). Live in
+about thirty seconds. Re-drag to update.
 
-**Protect the admin page.** The PIN in `config.js` is obscurity, not security —
-anyone can read it in the page source. Either:
+### Better: GitHub, then auto-deploy on every push
 
-- Netlify → Site configuration → **Access control → Password protection**
-  (paid feature, protects the whole site), or
-- rely on Supabase auth + RLS (below), which is what actually keeps customer
-  contact details private.
+The repo is already initialised with a first commit. Create an empty repo on
+GitHub — **no README, no .gitignore, no licence**, or the first push will
+conflict — then:
 
----
+```bash
+cd print-shop-site
+git remote add origin https://github.com/YOUR-USERNAME/axis3d-site.git
+git branch -M main
+git push -u origin main
+```
+
+Then in Netlify: **Add new site → Import an existing project → GitHub**, pick
+the repo, and use:
+
+| Setting | Value |
+|---|---|
+| Branch | `main` |
+| Build command | *(leave empty)* |
+| Publish directory | `.` |
+
+Every `git push` redeploys. To make a change afterwards:
+
+```bash
+git add -A
+git commit -m "what changed"
+git push
+```
+
+`netlify.toml` already handles pretty URLs (`/shop`, `/setup`), security
+headers, and cache rules. JS and CSS revalidate on every visit — with no build
+step the filenames never change, so a long cache would strand returning
+visitors on a stale `config.js`.
+
+### Is it safe to commit `config.js`?
+
+Yes. It holds your Supabase project URL and the **anon** key, both designed to
+be public, and it holds no rates. What must never be committed is the
+`service_role` key — it bypasses row level security entirely. It is not in this
+repo and should never be pasted into it.
+
+If you would rather the anon key were not in your git history at all, make the
+repo private. The key alone grants nothing beyond what the policies allow.
+
+### Protecting the owner pages
+
+`admin.html`, `setup.html` and `quote.html` are reachable by URL — `robots.txt`
+asks crawlers to skip them, which is a request, not a wall. The real protection
+is that all three require your Supabase login before they show or compute
+anything. For a hard block, Netlify's password protection (paid) covers the
+whole site.
 
 ## Storing your data so you can get it back
 
