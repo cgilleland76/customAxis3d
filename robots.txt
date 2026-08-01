@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /setup.html
+Disallow: /setup
+Disallow: /quote.html
+Disallow: /quote

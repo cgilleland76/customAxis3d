@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Idea Modeler</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .refs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;margin-top:10px}
+  .refs .r{position:relative;aspect-ratio:1;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);background:var(--panel2)}
+  .refs .r img{width:100%;height:100%;object-fit:cover}
+  .refs .r button{position:absolute;top:3px;right:3px;background:rgba(11,14,19,.85);border:1px solid var(--border2);
+    color:var(--text);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:11px;line-height:1}
+  .refs .addbox{aspect-ratio:1;border:2px dashed var(--border2);border-radius:var(--r-sm);display:grid;place-items:center;
+    cursor:pointer;color:var(--dim);font-size:22px;transition:.15s}
+  .refs .addbox:hover{border-color:var(--accent);color:var(--accent)}
+  #spec{background:linear-gradient(180deg,var(--panel),#13181f);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+  #spec .sh{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px}
+  #spec .sh h3{font-size:16px}
+  #spec .sh .id{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+  #spec .sb{padding:18px}
+  #spec dl{display:grid;grid-template-columns:118px 1fr;gap:9px 14px;font-size:13.5px}
+  #spec dt{font-family:var(--mono);font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--dim);padding-top:3px}
+  #spec dd{color:var(--text)}
+  #spec dd.empty{color:var(--dim);font-style:italic}
+  .promptbox{background:#0d1117;border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;
+    font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--muted);white-space:pre-wrap;word-break:break-word;max-height:210px;overflow:auto}
+  .genslot{margin-top:14px;border:1px dashed var(--border2);border-radius:var(--r);min-height:170px;
+    display:grid;place-items:center;padding:18px;text-align:center;color:var(--dim);font-size:13px}
+  .genslot img{border-radius:var(--r-sm);max-height:340px}
+</style>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">03 — Idea Modeler</span>
+      <h2>Describe what you want made</h2>
+      <p>Write it however it comes out. The form turns your words into a build spec so we're both picturing the same object before anything gets printed.</p>
+    </div>
+    <a class="btn ghost sm" href="list.html">My list <span data-list-count class="mono">0</span> →</a>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="on">1 — Describe</div><div>2 — Constraints</div><div>3 — References</div><div>4 — Spec sheet</div>
+  </div>
+
+  <div class="split wide">
+    <!-- ============ INPUT ============ -->
+    <div class="stack">
+      <div class="panel">
+        <h2>1 — In your own words</h2>
+        <label class="req" for="desc">What is it, and what does it need to do?</label>
+        <textarea id="desc" style="min-height:130px" placeholder="A bracket that holds my shop vac hose to the side of my table saw. The hose is 2.5 inches. Needs to unclip fast so I can move it to the sander."></textarea>
+        <div class="rowflex" style="margin-top:9px">
+          <span class="chip" data-ex="A wall bracket that holds a 2.5in shop vac hose, quick-release, mounts with two screws">Shop bracket</span>
+          <span class="chip" data-ex="A memorial keepsake: a small heart with a name and two dates, sits on a shelf">Keepsake</span>
+          <span class="chip" data-ex="A replacement knob for a 1970s stove, D-shaped shaft about 6mm, needs to grip well">Replacement part</span>
+          <span class="chip" data-ex="A gift box shaped like a tackle box, hinged lid, fits a fishing lure and a note">Gift box</span>
+        </div>
+        <p class="hint">Tap an example to load it, then edit. More detail = fewer back-and-forth questions.</p>
+
+        <div class="row2" style="margin-top:6px">
+          <div>
+            <label for="cat">Closest category</label>
+            <select id="cat">
+              <option value="">— pick one —</option>
+              <option>Functional part / bracket</option>
+              <option>Replacement part</option>
+              <option>Sign / lettering</option>
+              <option>Gift / keepsake</option>
+              <option>Toy / game piece</option>
+              <option>Organizer / storage</option>
+              <option>Kitchen item</option>
+              <option>Cosplay / prop</option>
+              <option>Model / figure</option>
+              <option>Tool / jig</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="purpose">One-line purpose</label>
+            <input id="purpose" type="text" placeholder="Hold the hose off the floor">
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>2 — Constraints that matter</h2>
+        <div class="row3">
+          <div><label for="dw">Max width (in)</label><input id="dw" type="number" step="0.25" placeholder="6"></div>
+          <div><label for="dd">Max depth (in)</label><input id="dd" type="number" step="0.25" placeholder="3"></div>
+          <div><label for="dh">Max height (in)</label><input id="dh" type="number" step="0.25" placeholder="4"></div>
+        </div>
+        <p class="hint">My build volume is 10 × 10 × 10 in. Bigger pieces get split and joined.</p>
+
+        <label>Where does it live?</label>
+        <div class="choices" id="env"></div>
+
+        <label style="margin-top:14px">Does it need to…</label>
+        <div class="choices" id="feat"></div>
+
+        <div class="row2" style="margin-top:14px">
+          <div><label for="qty">How many</label><input id="qty" type="number" min="1" value="1"></div>
+          <div><label for="due">Needed by</label><input id="due" type="date"></div>
+        </div>
+
+        <label for="budget">Budget comfort (optional)</label>
+        <select id="budget">
+          <option value="">No preference</option>
+          <option>Under $15</option><option>$15–$40</option><option>$40–$80</option>
+          <option>$80–$150</option><option>Over $150 — it's worth it</option>
+        </select>
+
+        <label for="mustfit">Anything it must fit or attach to?</label>
+        <input id="mustfit" type="text" placeholder="2.5 in hose OD, 3/4 in plywood edge, M5 bolt…">
+        <p class="hint">If it has to mate with an existing object, bring the object or a caliper measurement.</p>
+      </div>
+
+      <div class="panel">
+        <h2>3 — Reference images <span class="dim" style="text-transform:none;letter-spacing:0">(optional, up to 4)</span></h2>
+        <p class="hint" style="margin:0 0 4px">Photos of the space, the part it replaces, or a style you like. Resized in your browser — never uploaded anywhere until you send the sheet.</p>
+        <div class="refs" id="refs"></div>
+        <input type="file" id="refFile" accept="image/*" multiple class="hide">
+        <label for="refUrl" style="margin-top:12px">…or paste an image link</label>
+        <div class="rowflex">
+          <input id="refUrl" type="url" placeholder="https://…" style="flex:1;min-width:180px">
+          <button class="btn ghost sm" id="refAdd">Add</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Your contact</h2>
+        <div class="row2">
+          <div><label class="req" for="cname">Name</label><input id="cname" type="text" placeholder="First name"></div>
+          <div><label for="cphone">Phone or email</label><input id="cphone" type="text" placeholder="So I can follow up"></div>
+        </div>
+        <p class="hint">Only used to reach you about this request. Nothing is charged on this site.</p>
+      </div>
+    </div>
+
+    <!-- ============ SPEC SHEET ============ -->
+    <div class="sticky stack">
+      <div id="spec">
+        <div class="sh">
+          <div><h3>Build spec sheet</h3><span class="id mono" id="specId"></span></div>
+          <span class="chip" id="specState">draft</span>
+        </div>
+        <div class="sb">
+          <dl id="specList"></dl>
+          <div class="divider"></div>
+          <h3 class="ph" style="font-family:var(--mono);font-size:10.5px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Generation prompt</h3>
+          <div class="promptbox" id="prompt"></div>
+          <div class="genslot" id="genslot">
+            <div>
+              <div style="font-size:22px;margin-bottom:6px">✦</div>
+              <div id="genMsg">Image generation is off — the spec sheet is what gets sent.</div>
+              <button class="btn sm hide" id="genBtn" style="margin-top:11px">Generate concept image</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <button class="btn block" id="submitBtn">Send this to the shop</button>
+        <div class="rowflex" style="margin-top:10px">
+          <button class="btn ghost sm" id="printBtn">Print sheet</button>
+          <button class="btn ghost sm" id="copyBtn">Copy as text</button>
+          <button class="btn ghost sm" id="mailBtn">Email it</button>
+        </div>
+        <p class="hint" id="orderNote"></p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="printsheet"></div>
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/idea.js"></script>
+</body>
+</html>

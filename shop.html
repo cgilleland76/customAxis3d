@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ready-Made Catalog</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">01 — Ready-Made</span>
+      <h2>Catalog</h2>
+      <p>Items I keep on hand or can batch out quickly. Tap any photo to enlarge. Add what you want to your list — nothing is charged here.</p>
+    </div>
+    <a class="btn ghost sm" href="list.html">My list <span data-list-count class="mono">0</span> →</a>
+  </div>
+
+  <div class="panel" style="margin-bottom:22px">
+    <div class="spread" style="align-items:flex-end">
+      <div style="flex:1;min-width:220px">
+        <label for="q">Search</label>
+        <input id="q" type="search" placeholder="dragon, planter, hook…" autocomplete="off">
+      </div>
+      <div style="min-width:150px">
+        <label for="sort">Sort</label>
+        <select id="sort">
+          <option value="name">Name A–Z</option>
+          <option value="price-asc">Price: low → high</option>
+          <option value="price-desc">Price: high → low</option>
+          <option value="fast">Fastest to print</option>
+        </select>
+      </div>
+      <label class="inline" style="padding-bottom:9px"><input type="checkbox" id="onlyQuick"> Quick prints only</label>
+    </div>
+    <div class="divider" style="margin:16px 0"></div>
+    <div class="filters" id="cats"></div>
+  </div>
+
+  <div class="products" id="grid"></div>
+  <div class="empty hide" id="noresults">No items match that.</div>
+
+  <div class="notice info" style="margin-top:26px">
+    <span>ⓘ</span>
+    <div>Colors shown are examples — final filament color is picked when we meet. Sizes and material can be adjusted on any item.</div>
+  </div>
+</main>
+
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/shop.js"></script>
+</body>
+</html>

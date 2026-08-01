@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Storage Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .step{border:1px solid var(--border);border-radius:var(--r);background:var(--panel);margin-bottom:16px;overflow:hidden}
+  .step > .h{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--border)}
+  .step > .h .n{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+    font-family:var(--mono);font-size:12px;background:var(--panel3);color:var(--muted);border:1px solid var(--border2)}
+  .step.done > .h .n{background:rgba(77,182,172,.16);border-color:var(--accent);color:var(--accent)}
+  .step > .h h3{font-size:15.5px;flex:1}
+  .step > .b{padding:18px}
+  .sql{background:#0d1117;border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;
+    font-family:var(--mono);font-size:11.5px;line-height:1.55;color:var(--muted);
+    white-space:pre;overflow:auto;max-height:260px}
+  .snippet{background:#0d1117;border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;
+    font-family:var(--mono);font-size:12px;color:var(--accent);white-space:pre-wrap;word-break:break-all}
+  ol.walk{margin:0 0 4px 18px;font-size:13.5px;color:var(--muted);line-height:1.85}
+  ol.walk strong{color:var(--text);font-weight:600}
+  ol.walk code{background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;
+    font-family:var(--mono);font-size:12px;color:var(--accent2)}
+  .tbl-state{display:grid;gap:8px;margin-top:12px}
+  .tbl-state .row{display:flex;align-items:center;gap:10px;font-size:13px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px}
+  .tbl-state .row .dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .tbl-state .row .nm{font-family:var(--mono);font-size:12.5px;min-width:86px}
+  .tbl-state .row .msg{color:var(--muted);font-size:12px;margin-left:auto;text-align:right}
+</style>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm" style="max-width:840px">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">Owner only</span>
+      <h2>Storage setup</h2>
+      <p>Connect the site to your Supabase project so every request lands somewhere you can pull up later — from any device, not just this browser.</p>
+    </div>
+    <a class="btn ghost sm" href="admin.html">Shop tools →</a>
+  </div>
+
+  <div class="notice info" id="statusBar" style="margin-bottom:20px">
+    <span>ⓘ</span><div id="statusText">Checking…</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step" id="s1">
+    <div class="h"><span class="n">1</span><h3>Create the project</h3></div>
+    <div class="b">
+      <ol class="walk">
+        <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener">supabase.com/dashboard</a> → <strong>New project</strong>.</li>
+        <li>Name it anything. Pick the region closest to you. Set a database password and <strong>save it somewhere</strong> — you won't need it for this site, but you'll want it later.</li>
+        <li>Wait for it to finish provisioning (a minute or two).</li>
+      </ol>
+      <p class="hint">The free tier is plenty here. A project pauses after a week with zero traffic and wakes on the next visit — if that ever bites you, opening the site is enough to wake it.</p>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step" id="s2">
+    <div class="h"><span class="n">2</span><h3>Create the tables</h3></div>
+    <div class="b">
+      <ol class="walk">
+        <li>In your project: <strong>SQL Editor</strong> → <strong>New query</strong>.</li>
+        <li>Paste the script below and press <strong>Run</strong>.</li>
+      </ol>
+      <div class="rowflex" style="margin:12px 0">
+        <button class="btn sm" id="copySql">Copy the SQL</button>
+        <button class="btn ghost sm" id="toggleSql">Show it</button>
+        <span class="hint" style="margin:0">Safe to run more than once.</span>
+      </div>
+      <div class="sql hide" id="sqlBox">loading…</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step" id="s3">
+    <div class="h"><span class="n">3</span><h3>Connect this site</h3></div>
+    <div class="b">
+      <ol class="walk">
+        <li><strong>Project Settings</strong> → <strong>API</strong> (or <strong>API Keys</strong>).</li>
+        <li>Copy the <strong>Project URL</strong> and the <strong>anon</strong> / publishable key. Not the <code>service_role</code> key — that one must never go in a website.</li>
+      </ol>
+      <label class="req" for="url">Project URL</label>
+      <input id="url" type="url" placeholder="https://abcdefghijkl.supabase.co" autocomplete="off">
+      <label class="req" for="key">Anon / publishable key</label>
+      <textarea id="key" style="min-height:74px;font-family:var(--mono);font-size:12px" placeholder="eyJhbGciOiJIUzI1NiIs…" autocomplete="off"></textarea>
+      <div class="rowflex" style="margin-top:12px">
+        <button class="btn" id="connectBtn">Connect and test</button>
+        <button class="btn ghost" id="forgetBtn">Disconnect</button>
+      </div>
+      <div id="connectMsg" style="margin-top:12px"></div>
+      <div class="tbl-state" id="tables"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step" id="s4">
+    <div class="h"><span class="n">4</span><h3>Prove a customer can actually submit</h3></div>
+    <div class="b">
+      <p class="hint" style="margin-top:0">This writes a throwaway request exactly the way a customer's phone would, then deletes it. If this passes, orders will reach you.</p>
+      <button class="btn" id="probeBtn">Run the write test</button>
+      <div id="probeMsg" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step" id="s5">
+    <div class="h"><span class="n">5</span><h3>Make it stick on the live site</h3></div>
+    <div class="b">
+      <p class="hint" style="margin-top:0">The keys above are saved in <em>this</em> browser only. Paste this into <code>assets/js/config.js</code> and commit it so every visitor's browser connects too. The anon key is safe to publish — the security policies in step 2 are what protect the data.</p>
+      <div class="snippet" id="snippet">Connect first and the snippet appears here.</div>
+      <button class="btn ghost sm" id="copySnippet" style="margin-top:11px">Copy snippet</button>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step" id="s6">
+    <div class="h"><span class="n">6</span><h3>Create your login</h3></div>
+    <div class="b">
+      <ol class="walk">
+        <li><strong>Authentication</strong> → <strong>Users</strong> → <strong>Add user</strong> → <strong>Create new user</strong>.</li>
+        <li>Use your own email and a strong password. Tick <strong>Auto Confirm User</strong> if it's offered.</li>
+        <li>That's the login for <a href="admin.html">Shop tools</a>. Customers can submit requests without an account; only this login can read them back.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step" id="s7">
+    <div class="h"><span class="n">7</span><h3>Move existing data up, or pull it down</h3></div>
+    <div class="b">
+      <div class="stat" id="localCounts" style="margin-bottom:14px"></div>
+      <div class="rowflex">
+        <button class="btn" id="pushBtn">Upload this browser → cloud</button>
+        <button class="btn ghost" id="pullBtn">Download cloud → this browser</button>
+        <button class="btn ghost" id="retryBtn">Retry unsent (<span id="obCount">0</span>)</button>
+      </div>
+      <div id="syncMsg" style="margin-top:12px"></div>
+      <p class="hint">Upload is safe to repeat — rows are matched on their id, so nothing duplicates. Download replaces this browser's copy with the cloud's.</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>What lives where</h2>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Data</th><th>Stored in</th><th>Who can read it</th></tr></thead>
+        <tbody>
+          <tr><td>Customer requests, idea sheets, order lists</td><td>Supabase <span class="mono dim">requests</span></td><td>Only your login</td></tr>
+          <tr><td>Saved quotes from sliced files</td><td>Supabase <span class="mono dim">quotes</span></td><td>Only your login</td></tr>
+          <tr><td>Product catalog</td><td>Supabase <span class="mono dim">products</span></td><td>Public — it's your storefront</td></tr>
+          <tr><td>Shop rates, admin PIN unlock</td><td>This browser only</td><td>You, on this device</td></tr>
+          <tr><td>A visitor's in-progress list</td><td>Their browser, until they send it</td><td>Them</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/setup.js"></script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AXIS3D — 3D Printing & Custom Fabrication</title>
+<meta name="description" content="Ready-made 3D prints, custom designs, and instant quotes from real slicer data. Orders arranged in person.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site"></header>
+
+<main>
+  <!-- ================= HERO ================= -->
+  <section class="wrap hero">
+    <span class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)"></span> Now taking orders in person</span>
+    <h1>Parts and gifts, <em>printed on demand</em>.</h1>
+    <p class="lead" id="heroBlurb"></p>
+    <div class="cta">
+      <a class="btn" href="shop.html">Browse ready-made →</a>
+      <a class="btn ghost" href="custom.html">Design something custom</a>
+      <a class="btn ghost" href="idea.html">Describe an idea</a>
+    </div>
+    <div class="rowflex" style="margin-top:30px">
+      <span class="chip">PLA · PETG · TPU · ABS</span>
+      <span class="chip">0.4 mm nozzle · 0.12–0.28 mm layers</span>
+      <span class="chip">Multi-color AMS</span>
+      <span class="chip amber">No payment on this site</span>
+    </div>
+  </section>
+
+  <!-- ================= FOUR PATHS ================= -->
+  <section class="wrap section-sm">
+    <div class="sec-head">
+      <div>
+        <span class="kicker">Four ways in</span>
+        <h2>Pick the path that fits what you need</h2>
+        <p>Everything below builds a request list you show me — or email me — so we can settle details and payment face to face.</p>
+      </div>
+    </div>
+    <div class="grid-cards">
+      <a class="feature" href="shop.html">
+        <span class="num">01</span>
+        <div class="ico">▦</div>
+        <h3>Ready-Made Catalog</h3>
+        <p>Things I keep printed or can batch out fast — fidgets, organizers, planters, hooks. Photos, sizes, colors.</p>
+        <span class="arrow">Browse catalog →</span>
+      </a>
+      <a class="feature" href="custom.html">
+        <span class="num">02</span>
+        <div class="ico">✎</div>
+        <h3>Custom Designs</h3>
+        <p>Configurable products — initial-and-name signs, name plates, keychains. Live preview as you type.</p>
+        <span class="arrow">Open configurator →</span>
+      </a>
+      <a class="feature" href="idea.html">
+        <span class="num">03</span>
+        <div class="ico">✦</div>
+        <h3>AI Idea Modeler</h3>
+        <p>Describe the thing in your own words. Get a structured spec sheet with references so we're picturing the same object.</p>
+        <span class="arrow">Describe an idea →</span>
+      </a>
+      <a class="feature" href="list.html">
+        <span class="num">04</span>
+        <div class="ico">⌗</div>
+        <h3>Your Request List</h3>
+        <p>Everything you pick lands here. Print it, email it, or just show me your phone when we meet.</p>
+        <span class="arrow">Open my list →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= FEATURED ================= -->
+  <section class="wrap section">
+    <div class="sec-head">
+      <div>
+        <span class="kicker">In stock / fast turnaround</span>
+        <h2>Popular right now</h2>
+      </div>
+      <a class="btn ghost sm" href="shop.html">See all →</a>
+    </div>
+    <div class="products" id="featured"></div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="wrap section-sm">
+    <div class="panel">
+      <h2>How ordering works</h2>
+      <div class="grid-cards" style="gap:20px">
+        <div>
+          <div class="chip mono" style="margin-bottom:9px">STEP 1</div>
+          <h3 style="font-size:15px;margin-bottom:5px">Build your list here</h3>
+          <p class="muted" style="font-size:13.5px">Add ready-made items, custom configs, or an idea sheet. It saves in your browser.</p>
+        </div>
+        <div>
+          <div class="chip mono" style="margin-bottom:9px">STEP 2</div>
+          <h3 style="font-size:15px;margin-bottom:5px">Send or show it</h3>
+          <p class="muted" style="font-size:13.5px">Print the list, email it, or pull it up on your phone when we meet.</p>
+        </div>
+        <div>
+          <div class="chip mono" style="margin-bottom:9px">STEP 3</div>
+          <h3 style="font-size:15px;margin-bottom:5px">Confirm & print</h3>
+          <p class="muted" style="font-size:13.5px">We lock in color, size and price in person. Then it goes on the printer.</p>
+        </div>
+        <div>
+          <div class="chip mono" style="margin-bottom:9px">STEP 4</div>
+          <h3 style="font-size:15px;margin-bottom:5px">Hand-off</h3>
+          <p class="muted" style="font-size:13.5px">Pick up and pay in person. Nothing is charged through this website.</p>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="notice">
+        <span>ⓘ</span>
+        <div><strong>This site does not process payments.</strong> No checkout, no card fields, no money changes hands online. It exists to organize what you want before we talk.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site"></footer>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+(function () {
+  var A = window.APP;
+  A.$('#heroBlurb').textContent = A.cfg.blurb || '';
+  document.title = (A.cfg.brand || 'AXIS3D') + ' — ' + (A.cfg.tagline || '3D Printing');
+
+  A.Products.list().then(function (all) {
+    var pick = all.filter(function (p) { return /bestseller|quick/.test(p.tags || ''); }).slice(0, 4);
+    if (pick.length < 4) pick = all.slice(0, 4);
+    A.$('#featured').innerHTML = pick.map(function (p) {
+      var img = p.img || A.placeholderSVG(p.name);
+      return '<article class="card">' +
+        '<div class="thumb" data-img="' + A.esc(img) + '" data-cap="' + A.esc(p.name) + '">' +
+          '<img src="' + A.esc(img) + '" alt="' + A.esc(p.name) + '" loading="lazy">' +
+          (/bestseller/.test(p.tags || '') ? '<span class="badge">Bestseller</span>' : (/quick/.test(p.tags || '') ? '<span class="badge">Quick print</span>' : '')) +
+        '</div>' +
+        '<div class="body"><h3>' + A.esc(p.name) + '</h3><p>' + A.esc(p.blurb || '') + '</p>' +
+          '<div class="meta">' +
+            (A.cfg.showPrices ? '<span class="price">' + A.money0(p.price || 0) + '</span>' : '<span class="chip">Ask for price</span>') +
+            '<span class="chip mono">' + A.esc(p.category || '') + '</span>' +
+          '</div></div>' +
+        '<div class="foot"><a class="btn ghost sm block" href="shop.html#' + A.esc(p.id) + '">View in catalog</a></div>' +
+      '</article>';
+    }).join('');
+    A.$$('#featured .thumb').forEach(function (t) {
+      t.addEventListener('click', function () { A.lightbox(t.dataset.img, t.dataset.cap); });
+    });
+  });
+})();
+</script>
+</body>
+</html>

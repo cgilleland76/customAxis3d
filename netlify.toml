@@ -1,0 +1,64 @@
+[build]
+  publish = "."
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# These filenames never change (no build step = no content hashing), so a long
+# max-age would strand returning visitors on a stale config.js for a week.
+# must-revalidate + Netlify's ETag = a cheap 304 on every visit instead.
+[[headers]]
+  for = "/assets/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/assets/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Images are safe to cache hard — you change the filename when you swap a photo.
+[[headers]]
+  for = "/assets/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[redirects]]
+  from = "/shop"
+  to = "/shop.html"
+  status = 200
+[[redirects]]
+  from = "/custom"
+  to = "/custom.html"
+  status = 200
+[[redirects]]
+  from = "/idea"
+  to = "/idea.html"
+  status = 200
+[[redirects]]
+  from = "/quote"
+  to = "/quote.html"
+  status = 200
+[[redirects]]
+  from = "/list"
+  to = "/list.html"
+  status = 200
+[[redirects]]
+  from = "/admin"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/setup"
+  to = "/setup.html"
+  status = 200

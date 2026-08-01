@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Custom Designs</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@600;700&family=Pacifico&family=Righteous&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .typepick{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px;margin-bottom:20px}
+  .typepick button{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);
+    padding:13px 11px;color:var(--muted);cursor:pointer;transition:.15s;text-align:left;font-size:12.5px;font-weight:600;
+  }
+  .typepick button .big{display:block;font-size:20px;margin-bottom:6px;line-height:1}
+  .typepick button:hover{border-color:var(--border2);color:var(--text)}
+  .typepick button.on{border-color:var(--accent);background:rgba(77,182,172,.09);color:var(--accent)}
+  #stage{
+    background:
+      radial-gradient(circle at 30% 20%,rgba(77,182,172,.07),transparent 60%),
+      repeating-conic-gradient(from 0deg at 50% 50%,#171c23 0% 25%,#1b2129 0% 50%) 0 0/26px 26px;
+    border:1px solid var(--border);border-radius:var(--r);
+    display:grid;place-items:center;padding:22px;min-height:340px;position:relative;overflow:hidden;
+  }
+  #stage svg{width:100%;max-width:520px;height:auto;filter:drop-shadow(0 14px 26px rgba(0,0,0,.55))}
+  #stage .dims{
+    position:absolute;bottom:11px;right:14px;font-family:var(--mono);font-size:10.5px;
+    color:var(--dim);background:rgba(11,14,19,.7);border:1px solid var(--border);
+    border-radius:99px;padding:3px 10px;
+  }
+  #stage .warn{position:absolute;top:11px;left:14px}
+  .est{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-top:16px}
+  @media(max-width:620px){.est{grid-template-columns:1fr 1fr}}
+  .est .box{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px}
+  .est .box h4{font-family:var(--mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+  .est .box .v{font-family:var(--mono);font-size:19px;font-weight:700;color:var(--text)}
+  .est .box.hi .v{color:var(--accent2)}
+</style>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">02 — Custom Designs</span>
+      <h2>Configurator</h2>
+      <p>Pick a product, type your text, watch it update. When it looks right, add it to your list and I'll build the model from these exact settings.</p>
+    </div>
+    <a class="btn ghost sm" href="list.html">My list <span data-list-count class="mono">0</span> →</a>
+  </div>
+
+  <div class="typepick" id="types"></div>
+
+  <div class="split">
+    <!-- ============ OPTIONS ============ -->
+    <div class="panel">
+      <h2 id="optTitle">Options</h2>
+      <div id="opts"></div>
+
+      <div class="divider"></div>
+      <h2>Colors</h2>
+      <label>Primary (body)</label>
+      <div class="swatches" id="sw1"></div>
+      <label style="margin-top:12px">Accent (text / name)</label>
+      <div class="swatches" id="sw2"></div>
+      <div class="row2" style="margin-top:12px">
+        <div><label for="c1">Primary hex</label><input type="color" id="c1" value="#1f2933"></div>
+        <div><label for="c2">Accent hex</label><input type="color" id="c2" value="#4db6ac"></div>
+      </div>
+      <p class="hint">Two-color parts print on the AMS. Single color is fine too — just set both the same.</p>
+
+      <div class="divider"></div>
+      <h2>Material</h2>
+      <div class="choices" id="material"></div>
+    </div>
+
+    <!-- ============ PREVIEW ============ -->
+    <div>
+      <div id="stage">
+        <div id="preview"></div>
+        <span class="dims" id="dims"></span>
+        <span class="warn chip amber hide" id="warn"></span>
+      </div>
+
+      <div class="est">
+        <div class="box"><h4>Approx. filament</h4><div class="v" id="eGrams">—</div></div>
+        <div class="box"><h4>Approx. print time</h4><div class="v" id="eHours">—</div></div>
+        <div class="box hi"><h4>Price range</h4><div class="v" id="ePrice">—</div></div>
+      </div>
+      <p class="hint"><span class="mono" id="bandLabel"></span> — <span id="bandNote"></span></p>
+
+      <div class="panel" style="margin-top:18px">
+        <h2>Add to your list</h2>
+        <div class="row2">
+          <div><label for="qty">Quantity</label><input type="number" id="qty" min="1" step="1" value="1"></div>
+          <div><label for="due">Needed by (optional)</label><input type="date" id="due"></div>
+        </div>
+        <label for="notes">Notes for me</label>
+        <textarea id="notes" placeholder="Gift for a graduation, needs to sit on a shelf, prefer matte finish…" style="min-height:74px"></textarea>
+        <div class="rowflex" style="margin-top:14px">
+          <button class="btn" id="addBtn">+ Add configuration to list</button>
+          <button class="btn ghost" id="pngBtn">Download preview</button>
+          <button class="btn ghost" id="resetBtn">Reset</button>
+        </div>
+        <p class="hint" id="orderNote"></p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/custom.js"></script>
+</body>
+</html>

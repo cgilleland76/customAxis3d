@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My List</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&family=Playfair+Display:wght@900&family=Dancing+Script:wght@700&family=Pacifico&family=Righteous&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .li{display:grid;grid-template-columns:76px 1fr auto;gap:14px;align-items:center;
+      padding:14px 0;border-bottom:1px solid var(--border)}
+  .li:last-child{border-bottom:none}
+  .li .th{width:76px;height:62px;border-radius:var(--r-sm);overflow:hidden;background:var(--panel2);
+      border:1px solid var(--border);display:grid;place-items:center}
+  .li .th img,.li .th svg{width:100%;height:100%;object-fit:cover}
+  .li h4{font-size:14.5px;margin-bottom:3px}
+  .li .d{font-size:12px;color:var(--muted);line-height:1.5}
+  .li .n{font-size:12px;color:var(--accent2);margin-top:4px}
+  .li .ctrl{display:flex;align-items:center;gap:9px}
+  .li .ctrl input{width:58px;text-align:center;font-family:var(--mono)}
+  @media(max-width:620px){
+    .li{grid-template-columns:60px 1fr;grid-template-areas:'t b' '. c';row-gap:9px}
+    .li .th{grid-area:t;width:60px;height:52px}
+    .li .body{grid-area:b}
+    .li .ctrl{grid-area:c;justify-content:flex-start}
+  }
+</style>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">Your request list</span>
+      <h2>My list</h2>
+      <p id="lead"></p>
+    </div>
+    <a class="btn ghost sm" href="shop.html">← Keep browsing</a>
+  </div>
+
+  <div class="split wide">
+    <div class="panel">
+      <h2>Items</h2>
+      <div id="items"></div>
+      <div class="empty hide" id="none">Nothing here yet — add something from the catalog, configurator, or idea modeler.</div>
+      <div class="divider"></div>
+      <div class="spread">
+        <button class="btn ghost sm" id="clearBtn">Clear list</button>
+        <div class="mono" style="font-size:14px">
+          <span class="dim">Ballpark total</span>
+          <strong id="total" style="color:var(--accent2);font-size:19px;margin-left:8px">$0</strong>
+        </div>
+      </div>
+      <p class="hint">Prices are estimates for conversation. Final numbers are set in person, and nothing is charged through this site.</p>
+    </div>
+
+    <div class="sticky stack">
+      <div class="panel">
+        <h2>Send it to the shop</h2>
+        <div class="row2">
+          <div><label class="req" for="cname">Your name</label><input id="cname" type="text"></div>
+          <div><label for="cphone">Phone or email</label><input id="cphone" type="text"></div>
+        </div>
+        <label for="when">When do you need it?</label>
+        <input id="when" type="date">
+        <label for="notes">Anything else</label>
+        <textarea id="notes" style="min-height:80px" placeholder="Colors, pickup time, questions…"></textarea>
+        <button class="btn block" id="sendBtn" style="margin-top:14px">Send request</button>
+        <div class="rowflex" style="margin-top:10px">
+          <button class="btn ghost sm" id="printBtn">Print list</button>
+          <button class="btn ghost sm" id="mailBtn">Email it</button>
+          <button class="btn ghost sm" id="copyBtn">Copy text</button>
+        </div>
+        <p class="hint" id="orderNote"></p>
+      </div>
+      <div class="notice">
+        <span>ⓘ</span>
+        <div>Your list lives in this browser. Print it or email it to yourself if you're switching devices.</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="printsheet"></div>
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/list.js"></script>
+</body>
+</html>

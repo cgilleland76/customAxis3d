@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Costing — Shop tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+<div id="tool">
+  <div class="sec-head">
+    <div>
+      <span class="kicker">Owner only — not linked publicly</span>
+      <h2>Job costing</h2>
+      <p>Drop a <strong>sliced</strong> Orca / Bambu <span class="mono">.3mf</span> project, or a raw <span class="mono">.gcode</span> from any slicer. Quote a job before you print it, then come back afterwards and record what it actually took.</p>
+    </div>
+    <a class="btn ghost sm" href="admin.html">← Shop tools</a>
+  </div>
+  <div class="notice" style="margin-bottom:18px">
+    <span>⚠</span>
+    <div>Everything on this page — filament cost, markup, profit — is yours only. Nothing here is shown to customers, and your rates are not present in the public site's code at all.</div>
+  </div>
+
+  <div class="notice info hide" id="recBanner" style="margin-bottom:14px">
+    <span>◉</span>
+    <div>Recording the <strong>actual</strong> print for <span id="recName" class="mono"></span>. Drop the final sliced file below.
+      <button class="btn ghost sm" id="recCancel" style="margin-left:10px">Cancel</button></div>
+  </div>
+
+  <div class="drop" id="drop">
+    <strong>Drop a .3mf or .gcode here</strong>
+    <span class="sub">or click to browse — the file never leaves your browser</span>
+    <input type="file" id="fileInput" accept=".3mf,.gcode,.gco,.g,.txt">
+  </div>
+  <div class="notice err hide" id="err" style="margin-top:14px"></div>
+
+  <div class="split" style="margin-top:22px">
+    <!-- ============ RATES ============ -->
+    <div class="panel">
+      <h2>Shop rates</h2>
+      <label for="s_fil">Filament cost ($ / kg)</label>
+      <input type="number" id="s_fil" step="0.01">
+      <div class="row2">
+        <div><label for="s_watts">Printer power (W avg)</label><input type="number" id="s_watts" step="1"></div>
+        <div><label for="s_kwh">Electricity ($ / kWh)</label><input type="number" id="s_kwh" step="0.001"></div>
+      </div>
+      <div class="row2">
+        <div><label for="s_markup">Markup multiplier (×)</label><input type="number" id="s_markup" step="0.1"></div>
+        <div><label for="s_hourly">Hourly rate ($ / hr)</label><input type="number" id="s_hourly" step="0.5"></div>
+      </div>
+      <label for="s_flat">Extra flat fee ($ — wear, labor, packaging)</label>
+      <input type="number" id="s_flat" step="0.25">
+
+      <div class="divider"></div>
+      <h2>Manual override</h2>
+      <div class="row2">
+        <div><label for="m_grams">Filament (g)</label><input type="number" id="m_grams" step="0.1" placeholder="auto"></div>
+        <div><label for="m_hours">Print time (hours)</label><input type="number" id="m_hours" step="0.1" placeholder="auto"></div>
+      </div>
+      <p class="hint">Overrides win when filled in — handy for unsliced files or corrections. Rates save in this browser and are shared with the Shop tools page.</p>
+    </div>
+
+    <!-- ============ RESULTS ============ -->
+    <div class="panel">
+      <h2>Breakdown</h2>
+      <div class="empty" id="empty">Load a file, or type grams and hours on the left.</div>
+      <div id="results" class="hide">
+        <div class="mono" id="fname" style="color:var(--accent);font-size:12.5px;margin-bottom:10px;word-break:break-all"></div>
+        <div class="rowflex" id="filaments" style="margin-bottom:10px"></div>
+        <div class="table-scroll" id="platesWrap"></div>
+        <div class="totals" id="totals"></div>
+
+        <div class="prices">
+          <div class="pricebox">
+            <h3>Price — markup model</h3>
+            <div class="val" id="p_markup">—</div>
+            <div class="detail" id="p_markup_d"></div>
+          </div>
+          <div class="pricebox alt">
+            <h3>Price — cost + hourly</h3>
+            <div class="val" id="p_hourly">—</div>
+            <div class="detail" id="p_hourly_d"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="rowflex">
+          <input type="text" id="q_name" placeholder="Job name (optional)" style="flex:1;min-width:170px">
+          <select id="q_request" style="width:auto;max-width:230px">
+            <option value="">Not linked to a request</option>
+          </select>
+          <button class="btn" id="saveBtn">Save quote</button>
+        </div>
+        <div class="rowflex" style="margin-top:12px">
+          <select id="r_model" style="width:auto">
+            <option value="markup">Filament + power</option>
+            <option value="hourly">Filament + power + hourly</option>
+          </select>
+          <select id="r_detail" style="width:auto">
+            <option value="itemized">Itemized</option>
+            <option value="summary">Summary</option>
+          </select>
+          <label class="inline"><input type="checkbox" id="r_markup" checked> Apply markup</label>
+          <button class="btn ghost" id="printBtn">Print quote</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HISTORY ============ -->
+  <div class="panel" style="margin-top:22px">
+    <div class="spread">
+      <h2 style="margin:0">Jobs — quoted vs actual</h2>
+      <div class="rowflex">
+        <button class="btn ghost sm" id="exportBtn">Export CSV</button>
+        <button class="btn ghost sm" id="clearBtn">Clear all</button>
+      </div>
+    </div>
+    <div class="stat" id="varSummary" style="margin-bottom:14px"></div>
+    <div class="empty" id="histEmpty">Save a quote and it becomes a job you can track.</div>
+    <div class="table-scroll" id="histWrap"></div>
+    <p class="hint">Variance is actual cost against quoted cost. Consistently over means the estimate is optimistic; consistently under means you are leaving money on the table.</p>
+  </div>
+</div>
+</main>
+
+<div id="receipt"></div>
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/quote.js"></script>
+</body>
+</html>

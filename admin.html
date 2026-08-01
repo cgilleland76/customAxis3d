@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Shop Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&family=Playfair+Display:wght@900&family=Dancing+Script:wght@700&family=Pacifico&family=Righteous&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<style>
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:12px}
+  .tabs button{background:none;border:1px solid transparent;color:var(--muted);padding:8px 15px;
+    border-radius:var(--r-sm);font-size:13.5px;font-weight:600;cursor:pointer;transition:.15s}
+  .tabs button:hover{color:var(--text);background:var(--panel2)}
+  .tabs button.on{background:rgba(77,182,172,.13);border-color:var(--accent);color:var(--accent)}
+  .req{border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;background:var(--panel)}
+  .req .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .req h4{font-size:15px;margin-bottom:4px}
+  .req .prev{width:120px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);padding:5px;flex:none}
+  .req .prev svg{width:100%;height:auto}
+  .req pre{white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    background:#0d1117;border:1px solid var(--border);border-radius:var(--r-sm);padding:11px;margin-top:10px;max-height:230px;overflow:auto}
+  .req .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .req .thumbs img{width:74px;height:74px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:zoom-in}
+  .stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:11px;margin-bottom:20px}
+  .stat .b{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+  .stat .b h5{font-family:var(--mono);font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--dim);margin-bottom:5px}
+  .stat .b .v{font-family:var(--mono);font-size:22px;font-weight:700}
+  #gate{max-width:340px;margin:60px auto}
+</style>
+</head>
+<body>
+<header class="site"></header>
+
+<main class="wrap section-sm">
+  <!-- ============ PIN GATE ============ -->
+  <div id="gate" class="panel">
+    <h2>Shop tools</h2>
+    <p class="hint" style="margin-top:0">Enter your PIN. This only hides the page from visitors — see the README for real protection.</p>
+    <div id="pinBlock">
+      <label for="pin">PIN</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off">
+    </div>
+    <div id="authBlock" class="hide">
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username">
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password">
+      <p class="hint">Signing in is what lets this page read customer requests out of Supabase.</p>
+    </div>
+    <button class="btn block" id="unlock" style="margin-top:12px">Unlock</button>
+    <div id="gateErr" class="notice err hide" style="margin-top:12px"></div>
+  </div>
+
+  <!-- ============ PANEL ============ -->
+  <div id="panel" class="hide">
+    <div class="sec-head">
+      <div><span class="kicker">Owner only</span><h2>Shop tools</h2></div>
+      <button class="btn ghost sm" id="lock">Lock</button>
+    </div>
+
+    <div class="stat" id="stats"></div>
+
+    <div class="tabs">
+      <button data-t="requests" class="on">Incoming</button>
+      <button data-t="products">Catalog</button>
+      <button data-t="rates">Pricing</button>
+      <button data-t="quotes">Jobs</button>
+      <button data-t="setup">Setup</button>
+    </div>
+
+    <!-- Incoming -->
+    <section data-p="requests">
+      <div class="rowflex" style="margin-bottom:14px">
+        <div class="filters" id="statusFilter">
+          <button data-s="all" class="on">All</button>
+          <button data-s="new">New</button>
+          <button data-s="working">Working</button>
+          <button data-s="done">Done</button>
+        </div>
+        <button class="btn ghost sm" id="reqCsv" style="margin-left:auto">Export CSV</button>
+      </div>
+      <div id="reqs"></div>
+      <div class="empty hide" id="reqEmpty">No requests yet.</div>
+    </section>
+
+    <!-- Catalog -->
+    <section data-p="products" class="hide">
+      <div class="panel" style="margin-bottom:16px">
+        <h2 id="pfTitle">Add a product</h2>
+        <div class="row2">
+          <div><label class="req" for="p_name">Name</label><input id="p_name" type="text"></div>
+          <div><label for="p_cat">Category</label><input id="p_cat" type="text" list="catlist"><datalist id="catlist"></datalist></div>
+        </div>
+        <label for="p_blurb">Short description</label>
+        <input id="p_blurb" type="text" maxlength="90">
+        <div class="row3">
+          <div><label for="p_price">Price ($)</label><input id="p_price" type="number" step="1"></div>
+          <div><label for="p_grams">Filament (g)</label><input id="p_grams" type="number" step="1"></div>
+          <div><label for="p_hours">Hours</label><input id="p_hours" type="number" step="0.1"></div>
+        </div>
+        <label for="p_img">Photo URL <span class="dim">(or upload below)</span></label>
+        <input id="p_img" type="text" placeholder="https://… or leave blank for a placeholder">
+        <div class="rowflex" style="margin-top:9px">
+          <input type="file" id="p_file" accept="image/*" class="hide">
+          <button class="btn ghost sm" id="p_upload">Upload photo</button>
+          <label class="inline"><input type="checkbox" id="p_batch" checked> Batch / in stock</label>
+          <label class="inline"><input type="checkbox" id="p_best"> Bestseller</label>
+          <label class="inline"><input type="checkbox" id="p_quick"> Quick print</label>
+        </div>
+        <div id="p_preview" style="margin-top:11px"></div>
+        <div class="rowflex" style="margin-top:14px">
+          <button class="btn" id="p_save">Save product</button>
+          <button class="btn ghost" id="p_cancel">Clear</button>
+          <button class="btn ghost" id="p_seed">Reset to sample catalog</button>
+          <button class="btn ghost" id="p_export">Export JSON</button>
+        </div>
+        <p class="hint">Photos are stored as compressed data in this browser (and Supabase if connected). For lots of photos, host them somewhere and paste URLs instead.</p>
+      </div>
+      <div class="table-scroll"><div id="plist"></div></div>
+    </section>
+
+    <!-- Pricing -->
+    <section data-p="rates" class="hide">
+      <div class="notice" style="margin-bottom:16px">
+        <span>🔒</span>
+        <div><strong>Rates below are private.</strong> They are stored with <span class="mono">is_public = false</span> and are unreadable without this login — they are not in the public site's code at all. The price bands underneath <em>are</em> public, which is fine: they are prices you have already marked up.</div>
+      </div>
+      <div class="panel" style="max-width:520px">
+        <h2>Your costs — private</h2>
+        <p class="hint" style="margin-top:0">Used by job costing only. Never sent to a customer's browser.</p>
+        <label for="r_fil">Filament cost ($ / kg)</label><input id="r_fil" type="number" step="0.01">
+        <div class="row2">
+          <div><label for="r_watts">Printer power (W)</label><input id="r_watts" type="number" step="1"></div>
+          <div><label for="r_kwh">Electricity ($ / kWh)</label><input id="r_kwh" type="number" step="0.001"></div>
+        </div>
+        <div class="row2">
+          <div><label for="r_markup">Markup (×)</label><input id="r_markup" type="number" step="0.1"></div>
+          <div><label for="r_hourly">Hourly rate ($ / h)</label><input id="r_hourly" type="number" step="0.5"></div>
+        </div>
+        <label for="r_flat">Flat fee ($)</label><input id="r_flat" type="number" step="0.25">
+        <button class="btn" id="r_save" style="margin-top:14px">Save rates</button>
+        <div class="divider"></div>
+        <h2>Sanity check</h2>
+        <p class="hint" style="margin-top:0">A 50 g / 3 h print at these rates:</p>
+        <div class="totals" id="r_demo"></div>
+        <div class="rowflex" style="margin-top:16px">
+          <a class="btn ghost sm" href="quote.html">Open job costing →</a>
+        </div>
+      </div>
+
+      <div class="panel" style="max-width:640px;margin-top:16px">
+        <h2>Customer price bands — public</h2>
+        <p class="hint" style="margin-top:0">What the configurator quotes. Set by longest dimension. These are the only prices customers ever see computed on the site.</p>
+        <div class="table-scroll"><div id="bandRows"></div></div>
+        <div class="rowflex" style="margin-top:12px">
+          <button class="btn" id="b_save">Save bands</button>
+          <button class="btn ghost" id="b_add">Add a band</button>
+        </div>
+        <div id="b_msg" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <!-- Quotes -->
+    <section data-p="quotes" class="hide">
+      <div class="rowflex" style="margin-bottom:14px">
+        <button class="btn ghost sm" id="q_csv">Export CSV</button>
+      </div>
+      <div class="table-scroll" id="qlist"></div>
+      <div class="empty hide" id="qEmpty">No saved quotes.</div>
+    </section>
+
+    <!-- Setup -->
+    <section data-p="setup" class="hide">
+      <div class="panel">
+        <h2>Where your data lives</h2>
+        <div id="setupState"></div>
+        <div class="rowflex" style="margin-top:14px">
+          <a class="btn sm" href="setup.html">Open storage setup →</a>
+          <button class="btn ghost sm" id="retryBtn">Retry unsent (<span id="obCount">0</span>)</button>
+        </div>
+        <div class="divider"></div>
+        <h2>Backup / restore</h2>
+        <p class="hint" style="margin-top:0">Local-storage data lives only in this browser. Download a backup before clearing history or switching computers.</p>
+        <div class="rowflex">
+          <button class="btn ghost sm" id="dumpBtn">Download backup (JSON)</button>
+          <input type="file" id="restoreFile" accept=".json" class="hide">
+          <button class="btn ghost sm" id="restoreBtn">Restore from backup</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="site"></footer>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
