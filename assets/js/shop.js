@@ -36,35 +36,57 @@
 
   function swatches(p) {
     if (!FILS.length) return '';
-    var inStock = FILS.filter(function (f) { return f.in_stock; });
-    var toOrder = FILS.filter(function (f) { return !f.in_stock; });
 
-    function opts(cur) {
-      function group(label, list) {
-        if (!list.length) return '';
-        return '<optgroup label="' + A.esc(label) + '">' + list.map(function (f) {
-          return '<option value="' + A.esc(f.id) + '"' + (f.id === cur ? ' selected' : '') + '>' +
-            A.esc(f.name) + (f.brand ? ' — ' + A.esc(f.brand) : '') + '</option>';
-        }).join('') + '</optgroup>';
-      }
-      return group('On the shelf', inStock) +
-             group('Made to order', toOrder);
+    function row(f, cur) {
+      return '<li role="option" tabindex="-1" data-fil="' + A.esc(f.id) + '"' +
+        (f.id === cur ? ' aria-selected="true" class="on"' : ' aria-selected="false"') + '>' +
+        '<span class="sw" style="background:' + A.esc(f.hex) + '"></span>' +
+        '<span class="cname">' + A.esc(f.name) + '</span>' +
+        '<span class="cbrand">' + A.esc(f.brand || '') + '</span>' +
+        (f.in_stock ? '' : '<span class="cflag">to order</span>') +
+      '</li>';
     }
 
     return '<div class="colours">' + A.Filaments.slotsFor(p).map(function (s) {
       var cur = (PICKED[p.id] || {})[s.index] || s.default;
-      var f = fil(cur) || inStock[0] || FILS[0];
-      return '<div class="slot">' +
-        '<label class="slot-label" for="c-' + A.esc(p.id) + '-' + s.index + '">' +
-          A.esc(s.label) + '</label>' +
-        '<span class="sw" style="background:' + A.esc(f ? f.hex : '#888') + '" aria-hidden="true"></span>' +
-        '<select class="csel" id="c-' + A.esc(p.id) + '-' + s.index + '"' +
-          ' data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '">' +
-          opts(cur) +
-        '</select>' +
+      var f = fil(cur) || FILS.filter(function (x) { return x.in_stock; })[0] || FILS[0];
+      var id = 'c-' + p.id + '-' + s.index;
+      var inStock = FILS.filter(function (x) { return x.in_stock; });
+      var toOrder = FILS.filter(function (x) { return !x.in_stock; });
+
+      return '<div class="slot" data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '">' +
+        '<span class="slot-label">' + A.esc(s.label) + '</span>' +
+        '<button type="button" class="cbtn" id="' + A.esc(id) + '"' +
+          ' aria-haspopup="listbox" aria-expanded="false">' +
+          '<span class="sw" style="background:' + A.esc(f ? f.hex : '#888') + '"></span>' +
+          '<span class="cname">' + A.esc(f ? f.name : 'Pick a colour') + '</span>' +
+          '<span class="cbrand">' + A.esc(f && f.brand ? f.brand : '') + '</span>' +
+          '<span class="carr" aria-hidden="true">&#9662;</span>' +
+        '</button>' +
+        '<ul class="clist hide" role="listbox" aria-labelledby="' + A.esc(id) + '">' +
+          (inStock.length ? '<li class="chead" role="presentation">On the shelf</li>' : '') +
+          inStock.map(function (x) { return row(x, cur); }).join('') +
+          (toOrder.length ? '<li class="chead" role="presentation">Made to order</li>' : '') +
+          toOrder.map(function (x) { return row(x, cur); }).join('') +
+        '</ul>' +
       '</div>';
     }).join('') + '</div>';
   }
+
+  function closeLists(except) {
+    A.$$('#grid .clist').forEach(function (l) {
+      if (l === except) return;
+      l.classList.add('hide');
+      var b = l.parentNode.querySelector('.cbtn');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest || !e.target.closest('.slot')) closeLists(null);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLists(null);
+  });
 
   function leadNote(p) {
     var lead = A.Filaments.leadTime(pickedFor(p));
@@ -106,19 +128,42 @@
     A.$$('#grid .thumb').forEach(function (t) {
       t.addEventListener('click', function () { A.lightbox(t.dataset.img, t.dataset.cap); });
     });
-    A.$$('#grid .csel').forEach(function (sel) {
-      sel.addEventListener('change', function () {
-        var pid = sel.dataset.pid;
+    A.$$('#grid .cbtn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var list = btn.parentNode.querySelector('.clist');
+        var opening = list.classList.contains('hide');
+        closeLists(opening ? list : null);
+        list.classList.toggle('hide', !opening);
+        btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      });
+    });
+
+    A.$$('#grid .clist [data-fil]').forEach(function (li) {
+      li.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var slot = li.closest('.slot');
+        var pid = slot.dataset.pid;
         PICKED[pid] = PICKED[pid] || {};
-        PICKED[pid][sel.dataset.slot] = sel.value;
-        var f = fil(sel.value);
-        var dot = sel.parentNode.querySelector('.sw');
-        if (dot && f) dot.style.background = f.hex;
+        PICKED[pid][slot.dataset.slot] = li.dataset.fil;
+
+        var f = fil(li.dataset.fil);
+        var btn = slot.querySelector('.cbtn');
+        btn.querySelector('.sw').style.background = f.hex;
+        btn.querySelector('.cname').textContent = f.name;
+        btn.querySelector('.cbrand').textContent = f.brand || '';
+        slot.querySelectorAll('[data-fil]').forEach(function (o) {
+          var on = o === li;
+          o.classList.toggle('on', on);
+          o.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        closeLists(null);
+
         var card = document.getElementById(pid);
         var note = card && card.querySelector('.lead');
-        var lead = A.Filaments.leadTime(pickedFor(ALL.filter(function (x) {
-          return x.id === pid; })[0]));
         if (note) note.remove();
+        var lead = A.Filaments.leadTime(pickedFor(
+          ALL.filter(function (x) { return x.id === pid; })[0]));
         if (lead && card) {
           var d = document.createElement('div');
           d.className = 'lead';
