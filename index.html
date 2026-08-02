@@ -131,6 +131,8 @@
   document.title = (A.cfg.brand || 'AXIS3D') + ' — ' + (A.cfg.tagline || '3D Printing');
 
   A.Products.list().then(function (all) {
+    // Drafts never belong on the home page, even for a signed-in owner.
+    all = all.filter(function (p) { return (p.status || 'published') === 'published'; });
     if (!all.length) {                       // never advertise products that do not exist
       var sec = A.$('#featured').closest('section');
       if (sec) sec.classList.add('hide');

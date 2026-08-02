@@ -193,6 +193,7 @@
     A.$('#p_batch').checked = p ? !!p.batch : true;
     A.$('#p_best').checked = p ? /bestseller/.test(p.tags || '') : false;
     A.$('#p_quick').checked = p ? /quick/.test(p.tags || '') : false;
+    A.$('#p_status').value = p ? (p.status || 'published') : 'published';
     uploaded = p && p.img && p.img.indexOf('data:') === 0 ? p.img : '';
     drawPPreview();
   }
@@ -228,15 +229,22 @@
     var name = A.$('#p_name').value.trim();
     if (!name) { A.toast('Name is required', 'err'); return; }
     var tags = [A.$('#p_best').checked ? 'bestseller' : '', A.$('#p_quick').checked ? 'quick' : ''].filter(Boolean).join(' ');
-    var rec = {
+    /* Start from the existing row, not a blank object. Products created by the
+       3MF pipeline carry columns this form never shows — spec, dimensions_mm,
+       color_count, print_time_s, layer_height, printer, print_profile,
+       materials, images. Rebuilding from scratch silently dropped all of them
+       on every save. */
+    var existing = products.filter(function (p) { return p.id === editingId; })[0] || {};
+    var rec = Object.assign({}, existing, {
       id: editingId || ('p-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')),
       name: name, category: A.$('#p_cat').value.trim(), blurb: A.$('#p_blurb').value.trim(),
       price: parseFloat(A.$('#p_price').value) || 0,
       grams: parseFloat(A.$('#p_grams').value) || 0,
       hours: parseFloat(A.$('#p_hours').value) || 0,
       img: uploaded || A.$('#p_img').value.trim(),
-      batch: A.$('#p_batch').checked, tags: tags
-    };
+      batch: A.$('#p_batch').checked, tags: tags,
+      status: A.$('#p_status').value || 'published'
+    });
     products = products.filter(function (p) { return p.id !== rec.id; }).concat([rec]);
     A.Products.save(products).then(function () {
       A.toast(editingId ? 'Updated' : 'Added');

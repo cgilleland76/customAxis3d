@@ -96,6 +96,10 @@
   }
 
   A.Products.list().then(function (rows) {
+    /* Row level security already hides drafts from anonymous visitors, but two
+       paths get round it: browsing your own site while signed in, and the
+       localStorage cache that admin fills with draft rows. Filter here too. */
+    rows = rows.filter(function (p) { return (p.status || 'published') === 'published'; });
     ALL = rows;
     buildCats();
     render();

@@ -255,3 +255,69 @@ insert into public.settings (key, value, is_public) values
      {"maxIn": 999,"label": "Over 12 in",  "low": 75, "high": 140}
    ]'::jsonb, true)
 on conflict (key) do nothing;
+-- =====================================================================
+-- Axis3D — fold the live migrations back into schema.sql
+--
+-- These two changes were applied directly to the database and are NOT in
+-- supabase/schema.sql. Re-running schema.sql today would RE-CREATE the
+-- world-readable products policy and silently undo draft protection.
+--
+-- Paste this into supabase/schema.sql, after the products table block and
+-- after the existing products policies. Idempotent — safe to re-run.
+-- =====================================================================
+
+-- ---------- products: pipeline columns ----------
+alter table public.products add column if not exists status         text not null default 'published';
+alter table public.products add column if not exists dimensions_mm  text;
+alter table public.products add column if not exists color_count    integer;
+alter table public.products add column if not exists print_time_s   integer;
+alter table public.products add column if not exists layer_height   numeric;
+alter table public.products add column if not exists printer        text;
+alter table public.products add column if not exists print_profile  text;
+alter table public.products add column if not exists materials      text;
+alter table public.products add column if not exists images         jsonb;
+alter table public.products add column if not exists spec           jsonb;
+alter table public.products add column if not exists updated_at     timestamptz default now();
+
+-- Existing databases created before `status` existed: the column default only
+-- applies to new rows, so make sure nothing is left null.
+update public.products set status = 'published' where status is null;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'products_status_check') then
+    alter table public.products
+      add constraint products_status_check
+      check (status in ('draft', 'published', 'archived'));
+  end if;
+end $$;
+
+create index if not exists products_status_idx on public.products (status);
+
+-- ---------- products: draft-aware read policy ----------
+-- Replaces "products readable by all". The public catalog sees published rows
+-- only; signed-in owners see everything, which is why admin shows drafts.
+drop policy if exists "products readable by all" on public.products;
+
+drop policy if exists "published products readable by all" on public.products;
+create policy "published products readable by all"
+  on public.products for select
+  to public
+  using (status = 'published');
+
+drop policy if exists "all products readable when signed in" on public.products;
+create policy "all products readable when signed in"
+  on public.products for select
+  to authenticated
+  using (true);
+
+-- ---------- storage: public product images ----------
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('product-images', 'product-images', true, 26214400)
+on conflict (id) do update set public = true;
+
+drop policy if exists "product images public read" on storage.objects;
+create policy "product images public read"
+  on storage.objects for select
+  to public
+  using (bucket_id = 'product-images');
