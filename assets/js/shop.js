@@ -36,18 +36,33 @@
 
   function swatches(p) {
     if (!FILS.length) return '';
-    var slots = A.Filaments.slotsFor(p);
-    return '<div class="colours">' + slots.map(function (s) {
+    var inStock = FILS.filter(function (f) { return f.in_stock; });
+    var toOrder = FILS.filter(function (f) { return !f.in_stock; });
+
+    function opts(cur) {
+      function group(label, list) {
+        if (!list.length) return '';
+        return '<optgroup label="' + A.esc(label) + '">' + list.map(function (f) {
+          return '<option value="' + A.esc(f.id) + '"' + (f.id === cur ? ' selected' : '') + '>' +
+            A.esc(f.name) + (f.brand ? ' — ' + A.esc(f.brand) : '') + '</option>';
+        }).join('') + '</optgroup>';
+      }
+      return group('On the shelf', inStock) +
+             group('Made to order', toOrder);
+    }
+
+    return '<div class="colours">' + A.Filaments.slotsFor(p).map(function (s) {
       var cur = (PICKED[p.id] || {})[s.index] || s.default;
-      return '<div class="slot"><span class="slot-label">' + A.esc(s.label) + '</span>' +
-        FILS.map(function (f) {
-          var on = f.id === cur;
-          return '<button class="sw' + (on ? ' on' : '') + (f.in_stock ? '' : ' oos') + '"' +
-            ' data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '" data-fil="' + A.esc(f.id) + '"' +
-            ' title="' + A.esc(f.name) + (f.in_stock ? '' : ' — made to order') + '"' +
-            ' aria-label="' + A.esc(f.name) + (f.in_stock ? '' : ', made to order') + '"' +
-            ' style="background:' + A.esc(f.hex) + '"></button>';
-        }).join('') + '</div>';
+      var f = fil(cur) || inStock[0] || FILS[0];
+      return '<div class="slot">' +
+        '<label class="slot-label" for="c-' + A.esc(p.id) + '-' + s.index + '">' +
+          A.esc(s.label) + '</label>' +
+        '<span class="sw" style="background:' + A.esc(f ? f.hex : '#888') + '" aria-hidden="true"></span>' +
+        '<select class="csel" id="c-' + A.esc(p.id) + '-' + s.index + '"' +
+          ' data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '">' +
+          opts(cur) +
+        '</select>' +
+      '</div>';
     }).join('') + '</div>';
   }
 
@@ -72,9 +87,6 @@
         '<div class="meta">' +
           (A.cfg.showPrices ? '<span class="price">' + A.money0(p.price || 0) + '</span>'
                             : '<span class="chip">Ask for price</span>') +
-          '<span class="chip mono" title="Approx. filament and print time">' +
-            (p.grams ? p.grams + 'g' : '—') + ' · ' + (p.hours ? p.hours + 'h' : '—') +
-          '</span>' +
         '</div>' +
         swatches(p) + leadNote(p) +
       '</div>' +
@@ -94,14 +106,25 @@
     A.$$('#grid .thumb').forEach(function (t) {
       t.addEventListener('click', function () { A.lightbox(t.dataset.img, t.dataset.cap); });
     });
-    A.$$('#grid .sw').forEach(function (b) {
-      b.addEventListener('click', function () {
-        var pid = b.dataset.pid;
+    A.$$('#grid .csel').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        var pid = sel.dataset.pid;
         PICKED[pid] = PICKED[pid] || {};
-        PICKED[pid][b.dataset.slot] = b.dataset.fil;
-        render();
+        PICKED[pid][sel.dataset.slot] = sel.value;
+        var f = fil(sel.value);
+        var dot = sel.parentNode.querySelector('.sw');
+        if (dot && f) dot.style.background = f.hex;
         var card = document.getElementById(pid);
-        if (card) card.scrollIntoView({ block: 'nearest' });
+        var note = card && card.querySelector('.lead');
+        var lead = A.Filaments.leadTime(pickedFor(ALL.filter(function (x) {
+          return x.id === pid; })[0]));
+        if (note) note.remove();
+        if (lead && card) {
+          var d = document.createElement('div');
+          d.className = 'lead';
+          d.textContent = lead.text;
+          card.querySelector('.colours').insertAdjacentElement('afterend', d);
+        }
       });
     });
 

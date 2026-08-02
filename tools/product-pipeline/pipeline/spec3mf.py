@@ -48,6 +48,11 @@ class Spec:
     dimension_source: str = "model geometry"
     scale_mismatch: float = 0.0
     print_profile: str = ""
+    plate_count: int = 1
+    part_count: int = 0
+    largest_part: tuple = (0.0, 0.0)
+    plate_spread: tuple = (0.0, 0.0)
+    notes: list = field(default_factory=list)
 
     @property
     def print_time_h(self):
@@ -339,58 +344,118 @@ def _is_helper(name: str) -> bool:
     return any(h in (name or "").lower().replace(" ", "_") for h in HELPER_NAMES)
 
 
+def _active_plates(names):
+    """Plate numbers that were actually sliced.
+
+    A project can carry stale plate_N.json files from arrangements that were
+    never sliced -- only the plate with a matching plate_N.gcode is real.
+    Reading the wrong one silently reports another model's dimensions.
+    """
+    have_gcode = set()
+    for n in names:
+        m = re.search(r"plate_(\d+)\.gcode$", n)
+        if m:
+            have_gcode.add(int(m.group(1)))
+    return sorted(have_gcode)
+
+
 def _fallback_dimensions(z, names, spec):
     """Recover size from a sliced-output 3MF that has no mesh data."""
-    # --- XY from the plate bbox JSON -----------------------------------
-    xy = None
-    plate_json = _find(names, r"plate_\d+\.json$")
-    if plate_json:
+    plates = _active_plates(names)
+    spec.plate_count = len(plates)
+
+    # --- XY from the plate bbox JSON, active plates only ------------------
+    lo_x = lo_y = math.inf
+    hi_x = hi_y = -math.inf
+    found = False
+    for pn in plates or [1]:
+        cand = _find(names, rf"plate_{pn}\.json$")
+        if not cand:
+            continue
         try:
-            data = json.loads(z.read(plate_json).decode("utf-8", "replace"))
+            data = json.loads(z.read(cand).decode("utf-8", "replace"))
         except (json.JSONDecodeError, UnicodeDecodeError):
-            data = {}
-        real = [o for o in data.get("bbox_objects", []) if not _is_helper(o.get("name", ""))]
-        if real:
-            xs0 = min(o["bbox"][0] for o in real)
-            ys0 = min(o["bbox"][1] for o in real)
-            xs1 = max(o["bbox"][2] for o in real)
-            ys1 = max(o["bbox"][3] for o in real)
-            xy = (xs1 - xs0, ys1 - ys0)
-            for o in real:
-                nm = o.get("name", "")
-                if nm and nm not in spec.object_names:
-                    spec.object_names.append(nm)
-            if spec.layer_height is None:
-                lh = real[0].get("layer_height")
-                if lh:
-                    spec.layer_height = float(lh)
+            continue
+        real = [o for o in data.get("bbox_objects", [])
+                if not _is_helper(o.get("name", ""))]
+        for o in real:
+            b = o.get("bbox") or []
+            if len(b) != 4:
+                continue
+            w, d = b[2] - b[0], b[3] - b[1]
+            spec.part_count += 1
+            # Track the largest single part as well as the whole plate: for a
+            # multi-part model the plate footprint is just how the parts were
+            # arranged, which tells you nothing about the finished object.
+            if w * d > spec.largest_part[0] * spec.largest_part[1]:
+                spec.largest_part = (round(w, 2), round(d, 2))
+            lo_x, lo_y = min(lo_x, b[0]), min(lo_y, b[1])
+            hi_x, hi_y = max(hi_x, b[2]), max(hi_y, b[3])
+            found = True
+            nm = o.get("name", "")
+            if nm and nm not in spec.object_names:
+                spec.object_names.append(nm)
+        if spec.layer_height is None and real:
+            lh = real[0].get("layer_height")
+            if lh:
+                spec.layer_height = round(float(lh), 3)
         if spec.nozzle_diameter is None and data.get("nozzle_diameter"):
             spec.nozzle_diameter = round(float(data["nozzle_diameter"]), 2)
 
-    # --- Z from the embedded gcode header ------------------------------
+    xy = (hi_x - lo_x, hi_y - lo_y) if found else None
+
+    # --- Z from the tallest active plate's gcode header --------------------
     zh = None
-    gcode = _find(names, r"plate_\d+\.gcode$")
-    if gcode:
+    layers = 0
+    for pn in plates or [1]:
+        g = _find(names, rf"plate_{pn}\.gcode$")
+        if not g:
+            continue
         try:
-            with z.open(gcode) as fh:
+            with z.open(g) as fh:
                 head = fh.read(65536).decode("utf-8", "replace")
         except (KeyError, OSError):
-            head = ""
+            continue
         m = re.search(r";\s*max_z_height:\s*([\d.]+)", head, re.I)
         if m:
-            zh = float(m.group(1))
+            zh = max(zh or 0, float(m.group(1)))
         m = re.search(r";\s*total layer number:\s*(\d+)", head, re.I)
         if m:
-            spec.layer_count = int(m.group(1))
-        if zh is None and spec.layer_height and getattr(spec, "layer_count", 0):
-            zh = spec.layer_count * spec.layer_height
+            layers = max(layers, int(m.group(1)))
+    spec.layer_count = layers
+    if zh is None and spec.layer_height and layers:
+        zh = layers * spec.layer_height
 
     if xy and zh:
-        spec.bbox_mm = (round(xy[0], 2), round(xy[1], 2), round(zh, 2))
-        spec.dimension_source = "plate bbox + gcode header (geometry stripped from this 3MF)"
+        if spec.part_count > 1:
+            # Report the biggest part, not the spread of the layout.
+            spec.bbox_mm = (spec.largest_part[0], spec.largest_part[1], round(zh, 2))
+            spec.dimension_source = (
+                f"largest of {spec.part_count} parts + gcode header — this is a "
+                f"multi-part model, so confirm the assembled size by hand")
+            spec.plate_spread = (round(xy[0], 2), round(xy[1], 2))
+            spec.warnings.append(
+                f"{spec.part_count} parts — assembled size is a guess. Showing the "
+                f"largest part ({spec.largest_part[0]:.0f} x "
+                f"{spec.largest_part[1]:.0f} x {zh:.0f} mm); they were laid out "
+                f"across {xy[0]:.0f} x {xy[1]:.0f} mm. A sliced file records the "
+                f"layout, not how the parts go together — set the real size with "
+                f"'dimensions:' in product.yml.")
+        else:
+            spec.bbox_mm = (round(xy[0], 2), round(xy[1], 2), round(zh, 2))
+            spec.dimension_source = (
+                f"plate bbox + gcode header ({len(plates)} plate(s); geometry "
+                f"stripped from this 3MF)")
     elif xy:
         spec.bbox_mm = (round(xy[0], 2), round(xy[1], 2), 0.0)
         spec.warnings.append("Height unknown -- no max_z_height in the gcode header.")
+
+    if len(plates) > 1:
+        # One export is one product, so multiple plates are just how the job
+        # was split across the bed. Totals are what matter; no action needed.
+        spec.notes.append(
+            f"{len(plates)} plates in this export; time and weight are the "
+            f"total across all of them.")
 
 
 def _parse_transform(text):
@@ -427,13 +492,44 @@ def _compose(outer, inner):
 
 
 def _extract_thumbnails(z, names, out_dir):
+    """Pull out the previews for plates that were actually sliced.
+
+    A project carries a thumbnail for every plate it has ever held, including
+    arrangements that were never sliced and leftovers from other models. Taking
+    the largest PNG picks one of those at random -- which is how a card game
+    ended up showing a Winnie the Pooh wand.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
-    cands = [n for n in names
-             if n.lower().endswith(".png")
-             and any(k in n.lower() for k in ("thumbnail", "plate", "preview"))
-             and "small" not in n.lower()]
+    active = set(_active_plates(names))
+
+    def plate_of(name):
+        m = re.search(r"_(\d+)(?:_small)?\.png$", name)
+        return int(m.group(1)) if m else None
+
+    cands = []
+    for n in names:
+        low = n.lower()
+        if not low.endswith(".png") or "small" in low or "pick_" in low:
+            continue
+        if not any(k in low for k in ("thumbnail", "plate", "preview", "top_")):
+            continue
+        pn = plate_of(n)
+        if active and pn is not None and pn not in active:
+            continue                      # a plate that was never sliced
+        cands.append(n)
+
+    # plate_N.png is the lit render and makes the best hero image;
+    # plate_no_light and top_N are alternates.
+    def rank(n):
+        low = n.lower()
+        if "plate_no_light" in low:
+            return 2
+        if "top_" in low:
+            return 3
+        return 1
+
     written = []
-    for n in cands:
+    for n in sorted(cands, key=lambda n: (rank(n), n)):
         try:
             data = z.read(n)
         except KeyError:
@@ -442,9 +538,8 @@ def _extract_thumbnails(z, names, out_dir):
             continue
         dest = out_dir / f"slicer_{Path(n).name}"
         dest.write_bytes(data)
-        written.append((len(data), str(dest)))
-    written.sort(reverse=True)
-    return [p for _, p in written]
+        written.append(str(dest))
+    return written
 
 
 # ------------------------------------------------------------- gcode ----

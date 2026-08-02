@@ -31,16 +31,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from pipeline import env as _env  # noqa: E402
+_env.load()
+
 from pipeline.build import build_one, load_yaml   # noqa: E402
 from pipeline.archive import archive_product      # noqa: E402
 from pipeline.slicing import ensure_sliced        # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 MODEL_EXT = {".3mf", ".gcode", ".gco"}
-
-
-class _Ignore(Exception):
-    """Drop has nothing to process; remember it so we do not re-check forever."""
 
 
 def slugify(name: str) -> str:
@@ -106,7 +105,7 @@ def process(drop: Path, cfg: dict, args) -> None:
         return
     if not has_model(drop):
         print("[watch]   no .3mf/.gcode inside, ignoring")
-        raise _Ignore(drop)
+        return
 
     folder = stage(drop, ROOT / "products")
 
@@ -178,6 +177,7 @@ def main():
 
     mode = ("dry-run" if args.dry_run else
             "local only" if args.no_publish else "publishing drafts")
+    print(f"[watch] {_env.describe()}")
     print(f"[watch] watching {inbox}  ({mode})")
     print("[watch] drop a folder or a .3mf in there. ctrl-c to stop.\n")
 
@@ -189,8 +189,6 @@ def main():
                     continue
                 try:
                     process(drop, cfg, args)
-                except _Ignore:
-                    seen.add(drop)          # quietly stop re-checking this one
                 except Exception:
                     traceback.print_exc()
                     seen.add(drop)          # do not loop forever on a bad drop

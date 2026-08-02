@@ -51,13 +51,14 @@ def tags(meta: dict, spec, cfg: dict) -> list:
 
 def description(meta: dict, spec) -> str:
     """The prose body only -- what goes in the product row's description column."""
+    # The card already shows size, weight and time as chips, and the admin
+    # field is capped at 90 characters -- so the blurb is your sentence, not
+    # a restatement of the spec.
     notes = (meta.get("notes") or "").strip()
-    facts = (f"Printed to order at {spec.layer_height or 0.2:g} mm layers in "
-             f"{', '.join(spec.materials) or 'PLA'}. "
-             f"Measures {spec.dimensions_human}.")
-    if spec.print_time_s:
-        facts += f" Each one takes about {spec.print_time_human} on the machine."
-    return f"{notes}\n\n{facts}".strip() if notes else facts
+    if notes:
+        return notes
+    return (f"Printed to order in {', '.join(spec.materials) or 'PLA'}. "
+            f"Measures {spec.dimensions_human}.")
 
 
 def draft(meta: dict, spec, price: dict, cfg: dict) -> str:

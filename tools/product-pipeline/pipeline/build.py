@@ -20,6 +20,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from pipeline import env as _env  # noqa: E402
+_env.load()
+
 from pipeline import listing as copymod       # noqa: E402
 from pipeline import images as imagemod       # noqa: E402
 from pipeline import pricing                  # noqa: E402
@@ -91,6 +94,8 @@ def build_one(target: Path, cfg: dict, dry_run: bool = False) -> dict:
     spec = merge_specs(parsed)
     for w in spec.warnings:
         print(f"  ! {w}")
+    for n in getattr(spec, "notes", []):
+        print(f"  - {n}")
 
     print(f"  time:  {spec.print_time_human}")
     print(f"  size:  {spec.dimensions_human}")
@@ -126,6 +131,11 @@ def build_one(target: Path, cfg: dict, dry_run: bool = False) -> dict:
         "variants": cfg.get("variants", []),
         "file_hashes": hashes,
     }
+
+    if meta.get("dimensions"):
+        record["spec"]["dimensions_human"] = str(meta["dimensions"])
+        record["spec"]["dimension_source"] = "set by hand in product.yml"
+        print(f"  size:  {meta['dimensions']}  (from product.yml)")
 
     delta = cmp.compare(previous, record)
     record["change_status"] = delta["status"]
