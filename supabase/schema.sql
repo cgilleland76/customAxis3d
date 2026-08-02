@@ -120,6 +120,24 @@ create table if not exists public.quotes (
 );
 
 -- =============================================================
+--  Upgrades for databases created by an earlier version of this
+--  file. "create table if not exists" above does nothing when the
+--  table already exists, so new columns must be added explicitly.
+--  All of these are no-ops on a fresh database.
+-- =============================================================
+alter table public.quotes add column if not exists "requestId"   text;
+alter table public.quotes add column if not exists "actualFile"  text;
+alter table public.quotes add column if not exists "actualGrams" numeric;
+alter table public.quotes add column if not exists "actualHours" numeric;
+alter table public.quotes add column if not exists "actualCost"  numeric;
+alter table public.quotes add column if not exists "actualPrice" numeric;
+alter table public.quotes add column if not exists "actualAt"    timestamptz;
+alter table public.quotes add column if not exists "actualNote"  text;
+
+alter table public.requests add column if not exists "estPriceHigh" numeric;
+alter table public.requests add column if not exists "priceBand"    text;
+
+-- =============================================================
 --  Row Level Security
 -- =============================================================
 alter table public.products enable row level security;
