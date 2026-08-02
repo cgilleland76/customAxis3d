@@ -321,3 +321,32 @@ create policy "product images public read"
   on storage.objects for select
   to public
   using (bucket_id = 'product-images');
+
+-- ---------- filaments (colour catalogue + shelf stock) ----------
+create table if not exists public.filaments (
+  id             text primary key,
+  name           text not null,
+  material       text not null default 'PLA',
+  hex            text not null,
+  brand          text,
+  in_stock       boolean not null default true,
+  lead_days_min  integer not null default 2,
+  lead_days_max  integer not null default 5,
+  sort           integer not null default 100,
+  created_at     timestamptz default now(),
+  updated_at     timestamptz default now()
+);
+
+alter table public.products add column if not exists slots jsonb;
+
+alter table public.filaments enable row level security;
+
+drop policy if exists "filaments readable by all" on public.filaments;
+create policy "filaments readable by all"
+  on public.filaments for select to public using (true);
+
+drop policy if exists "owner manages filaments" on public.filaments;
+create policy "owner manages filaments"
+  on public.filaments for all to authenticated using (true) with check (true);
+
+create index if not exists filaments_stock_idx on public.filaments (in_stock, sort);

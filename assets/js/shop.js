@@ -22,6 +22,40 @@
     });
   }
 
+  var FILS = [], PICKED = {};
+
+  function fil(id) { return FILS.filter(function (f) { return f.id === id; })[0]; }
+
+  function pickedFor(p) {
+    var slots = A.Filaments.slotsFor(p);
+    return slots.map(function (s) {
+      var chosen = (PICKED[p.id] || {})[s.index] || s.default;
+      return fil(chosen) || FILS.filter(function (f) { return f.in_stock; })[0] || null;
+    });
+  }
+
+  function swatches(p) {
+    if (!FILS.length) return '';
+    var slots = A.Filaments.slotsFor(p);
+    return '<div class="colours">' + slots.map(function (s) {
+      var cur = (PICKED[p.id] || {})[s.index] || s.default;
+      return '<div class="slot"><span class="slot-label">' + A.esc(s.label) + '</span>' +
+        FILS.map(function (f) {
+          var on = f.id === cur;
+          return '<button class="sw' + (on ? ' on' : '') + (f.in_stock ? '' : ' oos') + '"' +
+            ' data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '" data-fil="' + A.esc(f.id) + '"' +
+            ' title="' + A.esc(f.name) + (f.in_stock ? '' : ' — made to order') + '"' +
+            ' aria-label="' + A.esc(f.name) + (f.in_stock ? '' : ', made to order') + '"' +
+            ' style="background:' + A.esc(f.hex) + '"></button>';
+        }).join('') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  function leadNote(p) {
+    var lead = A.Filaments.leadTime(pickedFor(p));
+    return lead ? '<div class="lead">' + A.esc(lead.text) + '</div>' : '';
+  }
+
   function card(p) {
     var img = p.img || A.placeholderSVG(p.name);
     var badge = /bestseller/.test(p.tags || '') ? 'Bestseller'
@@ -42,6 +76,7 @@
             (p.grams ? p.grams + 'g' : '—') + ' · ' + (p.hours ? p.hours + 'h' : '—') +
           '</span>' +
         '</div>' +
+        swatches(p) + leadNote(p) +
       '</div>' +
       '<div class="foot"><button class="btn sm block add" data-id="' + A.esc(p.id) + '">+ Add to list</button></div>' +
     '</article>';
@@ -59,13 +94,28 @@
     A.$$('#grid .thumb').forEach(function (t) {
       t.addEventListener('click', function () { A.lightbox(t.dataset.img, t.dataset.cap); });
     });
+    A.$$('#grid .sw').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pid = b.dataset.pid;
+        PICKED[pid] = PICKED[pid] || {};
+        PICKED[pid][b.dataset.slot] = b.dataset.fil;
+        render();
+        var card = document.getElementById(pid);
+        if (card) card.scrollIntoView({ block: 'nearest' });
+      });
+    });
+
     A.$$('#grid .add').forEach(function (b) {
       b.addEventListener('click', function () {
         var p = ALL.filter(function (x) { return x.id === b.dataset.id; })[0];
         if (!p) return;
+        var chosen = pickedFor(p).filter(Boolean);
+        var lead = A.Filaments.leadTime(chosen);
         A.List.add({
           key: 'product:' + p.id, kind: 'Ready-made', title: p.name,
-          detail: (p.category || '') + (p.grams ? ' · ~' + p.grams + 'g' : ''),
+          detail: (p.category || '') + (p.grams ? ' · ~' + p.grams + 'g' : '') +
+                  (chosen.length ? ' · ' + chosen.map(function (f) { return f.name; }).join(' + ') : '') +
+                  (lead ? ' · made to order (' + lead.min + '–' + lead.max + ' days)' : ''),
           price: p.price || 0, img: p.img || A.placeholderSVG(p.name)
         });
         A.toast('Added "' + p.name + '" to your list');
@@ -94,6 +144,8 @@
       });
     });
   }
+
+  A.Filaments.list().then(function (f) { FILS = f || []; render(); });
 
   A.Products.list().then(function (rows) {
     /* Row level security already hides drafts from anonymous visitors, but two

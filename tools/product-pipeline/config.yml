@@ -1,0 +1,123 @@
+# ---------------------------------------------------------------------------
+# Everything you tune lives here. Change a rate once, every product reprices.
+# ---------------------------------------------------------------------------
+
+shop:
+  name: "My Print Shop"
+  currency: "USD"
+  currency_symbol: "$"
+
+pricing:
+  # Where rates come from. "app" reads public.settings key 'rates' -- the same
+  # numbers your Shop tools > Pricing tab writes. "config" uses the block below.
+  source: app
+  model: hourly            # markup | hourly  (both are shown either way)
+
+  # What you actually pay per kilogram, by material. "default" covers anything
+  # not listed. Use your real landed cost including shipping.
+  filament_cost_per_kg:
+    default: 22.00
+    PLA: 20.00
+    PLA-CF: 32.00
+    PETG: 24.00
+    ABS: 22.00
+    ASA: 28.00
+    TPU: 34.00
+
+  machine_rate_per_hour: 1.50   # printer amortization + power + maintenance
+  labor_flat: 2.50              # per product: removal, cleanup, packing
+  labor_per_hour: 0.00          # only if a print needs babysitting
+  failure_rate: 0.08            # 8% buffer for failed/scrapped prints
+  margin_multiplier: 2.2        # the actual profit knob
+  min_price: 5.00
+  round_style: "charm"          # "charm" -> x.99, "whole" -> x.00, "none"
+
+images:
+  sizes: [1600, 800, 400]       # widest first; used for srcset
+  format: "webp"
+  quality: 88
+  square: true
+  padding_pct: 6                # whitespace around the product, keeps grid tidy
+  background: "#FFFFFF"         # or "transparent"
+  remove_background: true       # uses rembg if installed, else corner flood
+
+# Colors offered as variants. Rendered by render_variants.py.
+variants:
+  - name: "Matte Black"
+    hex: "#1A1A1A"
+  - name: "Bone White"
+    hex: "#F2EFE6"
+  - name: "Signal Red"
+    hex: "#C1272D"
+  - name: "Forest Green"
+    hex: "#2C5F3E"
+
+copy:
+  tone: "plain, specific, no hype"
+  include_spec_table: true
+  base_tags: ["3d printed", "made to order"]
+
+site:
+  # Where the generated product data gets written. Point this at your site.
+  output: "dist/products.json"
+  image_url_prefix: "/img/products"
+
+# ---------------------------------------------------------------------------
+# Supabase. Credentials come from the environment, never from this file:
+#   export SUPABASE_URL="https://xxxx.supabase.co"
+#   export SUPABASE_SERVICE_KEY="eyJ..."
+# ---------------------------------------------------------------------------
+supabase:
+  table: products
+  on_conflict: id            # id is the PK; re-dropping a product updates it
+  bucket: product-images
+  storage_prefix: products
+  public_bucket: true        # public: rows store full URLs, <img src> just works
+  native_json: true
+  status_column: status
+  draft_status: draft
+
+  # <your Axis3D column>: <pipeline field>
+  columns:
+    id: slug
+    name: name
+    category: category
+    blurb: description
+    price: price
+    grams: weight_g
+    hours: hours
+    img: hero_path
+    tags: tags_text
+    status: status
+    dimensions_mm: dimensions_human
+    color_count: color_count
+    print_time_s: print_time_s
+    layer_height: layer_height
+    printer: printer
+    print_profile: print_profile
+    materials: materials_text
+    images: image_paths
+    spec: spec_json
+    slots: slots
+
+# ---------------------------------------------------------------------------
+# Optional: let the pipeline slice project 3MFs itself, so you never have to
+# hand-export. Point `command` at your Snapmaker Orca executable.
+# ---------------------------------------------------------------------------
+slicer:
+  enabled: false
+  command: ""          # e.g. "C:/Program Files/Snapmaker Orca/snapmaker-orca.exe"
+  plate: 1
+  extra_args: []
+  timeout_s: 900
+
+# ---------------------------------------------------------------------------
+# Where files go after a product is published.
+# ---------------------------------------------------------------------------
+archive:
+  enabled: false
+  model_dir: ""        # *.3mf projects   -> your 3D model library
+  gcode_dir: ""        # *.gcode.3mf      -> your upload folder
+  subfolder_by_slug: true
+  move: true           # false = copy, leave the originals alone
+  on_conflict: rename  # rename | overwrite | skip

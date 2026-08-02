@@ -460,12 +460,113 @@
     fr.readAsText(f);
   });
 
+  /* ---------------- filament ---------------- */
+  var filaments = [], editingFil = null;
+
+  function drawFilaments() {
+    if (!filaments.length) {
+      A.$('#fil_list').innerHTML = '<div class="empty">No colours yet. Add your first below.</div>';
+      return;
+    }
+    A.$('#fil_list').innerHTML =
+      '<table class="tbl"><thead><tr><th></th><th>Colour</th><th>Material</th>' +
+      '<th>On the shelf</th><th>Lead</th><th></th></tr></thead><tbody>' +
+      filaments.map(function (f) {
+        return '<tr>' +
+          '<td><span style="display:inline-block;width:22px;height:22px;border-radius:50%;' +
+            'border:1px solid var(--border);background:' + A.esc(f.hex || '#888') + '"></span></td>' +
+          '<td>' + A.esc(f.name) + (f.brand ? '<div class="dim" style="font-size:11px">' +
+            A.esc(f.brand) + '</div>' : '') + '</td>' +
+          '<td class="dim">' + A.esc(f.material || 'PLA') + '</td>' +
+          '<td><label class="inline"><input type="checkbox" data-fstock="' + A.esc(f.id) + '"' +
+            (f.in_stock ? ' checked' : '') + '> ' +
+            (f.in_stock ? 'yes' : '<span class="dim">no</span>') + '</label></td>' +
+          '<td class="dim">' + (f.in_stock ? '—' : (f.lead_days_min || 2) + '–' + (f.lead_days_max || 5) + ' d') + '</td>' +
+          '<td style="text-align:right">' +
+            '<button class="btn ghost sm" data-fedit="' + A.esc(f.id) + '">Edit</button> ' +
+            '<button class="btn ghost sm" data-fdel="' + A.esc(f.id) + '">✕</button></td>' +
+        '</tr>';
+      }).join('') + '</tbody></table>';
+
+    A.$$('#fil_list [data-fstock]').forEach(function (c) {
+      c.addEventListener('change', function () {
+        var f = filaments.filter(function (x) { return x.id === c.dataset.fstock; })[0];
+        if (!f) return;
+        f.in_stock = c.checked;
+        A.Filaments.save(filaments).then(function () {
+          A.toast(f.name + (f.in_stock ? ' back in stock' : ' marked out of stock'));
+          drawFilaments();
+        });
+      });
+    });
+    A.$$('#fil_list [data-fedit]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        fForm(filaments.filter(function (x) { return x.id === b.dataset.fedit; })[0]);
+      });
+    });
+    A.$$('#fil_list [data-fdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!confirm('Remove this colour?')) return;
+        A.Filaments.remove(b.dataset.fdel).then(function (rows) {
+          filaments = rows; drawFilaments();
+        });
+      });
+    });
+  }
+
+  function fForm(f) {
+    editingFil = f ? f.id : null;
+    A.$('#fil_title').textContent = f ? 'Edit: ' + f.name : 'Add a colour';
+    A.$('#f_name').value = f ? f.name : '';
+    A.$('#f_mat').value = f ? (f.material || 'PLA') : 'PLA';
+    A.$('#f_hex').value = f ? (f.hex || '') : '';
+    A.$('#f_brand').value = f ? (f.brand || '') : '';
+    A.$('#f_lo').value = f ? (f.lead_days_min || 2) : 2;
+    A.$('#f_hi').value = f ? (f.lead_days_max || 5) : 5;
+    A.$('#f_stock').checked = f ? !!f.in_stock : true;
+    fPreview();
+  }
+
+  function fPreview() {
+    var hex = A.$('#f_hex').value.trim() || '#888888';
+    A.$('#f_preview').style.background = hex;
+  }
+  A.$('#f_hex').addEventListener('input', fPreview);
+
+  A.$('#f_save').addEventListener('click', function () {
+    var name = A.$('#f_name').value.trim();
+    var hex = A.$('#f_hex').value.trim();
+    if (!name) { A.toast('Name is required', 'err'); return; }
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) { A.toast('Hex must look like #7F77DD', 'err'); return; }
+
+    var mat = A.$('#f_mat').value.trim() || 'PLA';
+    var existing = filaments.filter(function (x) { return x.id === editingFil; })[0] || {};
+    var rec = Object.assign({}, existing, {
+      id: editingFil || (mat + '-' + name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      name: name, material: mat, hex: hex.toUpperCase(),
+      brand: A.$('#f_brand').value.trim() || null,
+      in_stock: A.$('#f_stock').checked,
+      lead_days_min: parseInt(A.$('#f_lo').value, 10) || 2,
+      lead_days_max: parseInt(A.$('#f_hi').value, 10) || 5,
+      sort: existing.sort || (filaments.length + 1) * 10
+    });
+    filaments = filaments.filter(function (x) { return x.id !== rec.id; }).concat([rec])
+      .sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); });
+    A.Filaments.save(filaments).then(function () {
+      A.toast(editingFil ? 'Updated' : 'Added');
+      fForm(null); drawFilaments();
+    });
+  });
+
+  A.$('#f_cancel').addEventListener('click', function () { fForm(null); });
+
   /* ---------------- boot ---------------- */
   function boot() {
     A.ready.then(function () {
       drawStats(); drawReqs(); loadRates(); drawQuotes(); drawSetup();
       A.Bands.load().then(function (b) { bands = (b || []).slice(); drawBands(); });
       A.Products.list().then(function (rows) { products = rows.slice(); drawProducts(); pForm(null); });
+      A.Filaments.list().then(function (rows) { filaments = rows.slice(); drawFilaments(); fForm(null); });
     });
   }
   A.ready.then(function (mode) {

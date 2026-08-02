@@ -374,3 +374,16 @@ footer.site .legal{border-top:1px solid var(--border);margin-top:26px;padding-to
   #printsheet{display:block !important}
 }
 #printsheet{display:none}
+
+/* colour slots on product cards */
+.colours{margin-top:10px}
+.slot{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.slot-label{font-size:11px;color:var(--muted);min-width:64px}
+.sw{width:22px;height:22px;padding:0;border-radius:50%;cursor:pointer;
+    border:1px solid var(--border);background-clip:padding-box}
+.sw:hover{transform:scale(1.12)}
+.sw.on{border:2px solid var(--accent);box-shadow:0 0 0 2px rgba(77,182,172,.22)}
+.sw.oos{opacity:.45}
+.sw.oos::after{content:"";position:absolute}
+.lead{margin-top:8px;font-size:12px;padding:7px 9px;border-radius:var(--r-sm);
+      background:rgba(239,159,39,.12);color:#EF9F27;border:1px solid rgba(239,159,39,.3)}

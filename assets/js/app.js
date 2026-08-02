@@ -295,6 +295,48 @@
     }
   };
 
+  /* ---- filaments (colour catalogue + what is on the shelf) ---- */
+  var Filaments = {
+    list: function () {
+      return cloudRead('filaments', 'sort', true).then(function (cloud) {
+        if (cloud) { localSave('filaments', cloud); return cloud; }
+        return localList('filaments') || [];
+      });
+    },
+    save: function (rows) {
+      localSave('filaments', rows);
+      return cloudWrite({ table: 'filaments', op: 'upsert', rows: rows })
+        .then(function (r) { return { rows: rows, synced: r.synced, reason: r.reason }; });
+    },
+    remove: function (id) {
+      var rows = (localList('filaments') || []).filter(function (f) { return f.id !== id; });
+      localSave('filaments', rows);
+      return cloudWrite({ table: 'filaments', op: 'delete', id: id }).then(function () { return rows; });
+    },
+
+    /* Slots a product offers, defaulted from its colour count when the
+       pipeline has not written an explicit definition. */
+    slotsFor: function (product) {
+      if (product && product.slots && product.slots.length) return product.slots;
+      var n = (product && product.color_count) || 1;
+      var out = [];
+      for (var i = 1; i <= n; i++) out.push({ index: i, label: 'Colour ' + i, default: null });
+      return out;
+    },
+
+    /* [{slot, filament}] -> lead time text, or null when everything is on hand. */
+    leadTime: function (picked) {
+      var out = picked.filter(function (f) { return f && !f.in_stock; });
+      if (!out.length) return null;
+      var lo = Math.max.apply(null, out.map(function (f) { return f.lead_days_min || 2; }));
+      var hi = Math.max.apply(null, out.map(function (f) { return f.lead_days_max || 5; }));
+      var names = out.map(function (f) { return f.name; });
+      return { names: names, min: lo, max: hi,
+               text: names.join(' and ') + ' ' + (names.length > 1 ? 'are' : 'is') +
+                     ' not on the shelf — add ' + lo + '–' + hi + ' days' };
+    }
+  };
+
   /* ---- requests (custom designs, idea modeler, order lists) ---- */
   var Requests = {
     create: function (rec) {
@@ -828,7 +870,7 @@
     $: $, $$: $$, el: el, esc: esc, money: money, money0: money0, uid: uid,
     today: today, stamp: stamp, fmtTime: fmtTime, debounce: debounce, qs: qs,
     lsGet: lsGet, lsSet: lsSet, toast: toast, placeholderSVG: placeholderSVG,
-    Products: Products, Requests: Requests, Quotes: Quotes, Rates: Rates, List: List, Auth: Auth,
+    Products: Products, Filaments: Filaments, Requests: Requests, Quotes: Quotes, Rates: Rates, List: List, Auth: Auth,
     Settings: Settings, Bands: Bands,
     Setup: Setup, Outbox: Outbox, lastError: function () { return LAST_ERROR; },
     lightbox: lightbox, downloadCSV: downloadCSV, renderChrome: renderChrome, gate: gate,

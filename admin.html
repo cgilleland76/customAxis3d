@@ -64,10 +64,45 @@
     <div class="tabs">
       <button data-t="requests" class="on">Incoming</button>
       <button data-t="products">Catalog</button>
+      <button data-t="filaments">Filament</button>
       <button data-t="rates">Pricing</button>
       <button data-t="quotes">Jobs</button>
       <button data-t="setup">Setup</button>
     </div>
+
+    <!-- Filament -->
+    <section data-p="filaments" class="hide">
+      <div class="panel">
+        <h4 style="margin-bottom:4px">Colours you offer</h4>
+        <p class="dim" style="font-size:13px;margin-bottom:14px">
+          Untick a colour when you run out. Customers can still pick it — the product
+          page shows the lead time instead of hiding it.
+        </p>
+        <div id="fil_list"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h4 id="fil_title" style="margin-bottom:12px">Add a colour</h4>
+        <div class="row3">
+          <div><label for="f_name">Name</label><input id="f_name" type="text" placeholder="Galaxy Purple"></div>
+          <div><label for="f_mat">Material</label><input id="f_mat" type="text" value="PLA"></div>
+          <div><label for="f_hex">Hex</label><input id="f_hex" type="text" placeholder="#7F77DD"></div>
+        </div>
+        <div class="row3" style="margin-top:9px">
+          <div><label for="f_brand">Brand <span class="dim">(optional)</span></label><input id="f_brand" type="text"></div>
+          <div><label for="f_lo">Lead days min</label><input id="f_lo" type="number" value="2" step="1"></div>
+          <div><label for="f_hi">Lead days max</label><input id="f_hi" type="number" value="5" step="1"></div>
+        </div>
+        <div class="rowflex" style="margin-top:9px">
+          <label class="inline"><input type="checkbox" id="f_stock" checked> On the shelf</label>
+          <span id="f_preview" style="width:30px;height:30px;border-radius:50%;border:1px solid var(--border);display:inline-block"></span>
+        </div>
+        <div class="rowflex" style="margin-top:14px">
+          <button class="btn" id="f_save">Save colour</button>
+          <button class="btn ghost" id="f_cancel">Clear</button>
+        </div>
+      </div>
+    </section>
 
     <!-- Incoming -->
     <section data-p="requests">
