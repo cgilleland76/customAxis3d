@@ -246,9 +246,14 @@
 
   A.$('#p_cancel').addEventListener('click', function () { pForm(null); });
   A.$('#p_seed').addEventListener('click', function () {
-    if (!confirm('Replace the catalog with the sample products?')) return;
-    products = A.Products.seed();
-    A.Products.save(products).then(function () { drawProducts(); drawStats(); A.toast('Sample catalog restored'); });
+    if (!confirm('Add 12 sample products to your catalog?\n\nThey become real rows you can edit or delete, and they WILL be visible to customers.')) return;
+    A.Products.loadSamples().then(function (r) {
+      products = r.rows;
+      drawProducts(); drawStats();
+      A.toast(r.synced === false && A.mode() === 'supabase'
+        ? 'Samples added here — uploading shortly'
+        : 'Samples added to your catalog');
+    });
   });
   A.$('#p_export').addEventListener('click', function () {
     var blob = new Blob([JSON.stringify(products, null, 2)], { type: 'application/json' });
@@ -257,6 +262,21 @@
   });
 
   function drawProducts() {
+    var src = A.Products.source();
+    var banner = A.$('#catState');
+    if (banner) {
+      if (!products.length) {
+        banner.innerHTML = '<div class="notice"><span>ⓘ</span><div><strong>Your catalog is empty.</strong> ' +
+          'Nothing is showing on the public site right now. Add your first product above, ' +
+          'or load the sample set to see how it looks.</div></div>';
+      } else if (src === 'demo') {
+        banner.innerHTML = '<div class="notice"><span>⚠</span><div><strong>These are sample products, not your catalog.</strong> ' +
+          'They exist only in this browser because no database is connected. Run the storage setup, then add your real products.</div></div>';
+      } else {
+        banner.innerHTML = '<span class="chip mono">' + products.length + ' product' +
+          (products.length === 1 ? '' : 's') + ' · source: ' + A.esc(src) + '</span>';
+      }
+    }
     var cats = {};
     products.forEach(function (p) { if (p.category) cats[p.category] = 1; });
     A.$('#catlist').innerHTML = Object.keys(cats).map(function (c) { return '<option value="' + A.esc(c) + '">'; }).join('');

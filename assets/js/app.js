@@ -190,8 +190,15 @@
                   function (e) { return { error: e }; });
   }
 
-  /* queueing write — this is what the app calls */
+  /* queueing write — this is what the app calls.
+     Waits for the connection attempt to finish first: called at page load,
+     MODE is still 'local' for the few hundred ms the client takes to come
+     up, and acting on that would silently write to the wrong place. */
   function cloudWrite(job) {
+    return readyPromise.then(function () { return cloudWriteNow(job); });
+  }
+
+  function cloudWriteNow(job) {
     if (MODE !== 'supabase') return Promise.resolve({ synced: false, reason: 'local' });
     return runWrite(job).then(function (r) {
       if (!r.error) return { synced: true, reason: '' };
@@ -205,6 +212,10 @@
   }
 
   function cloudRead(table, order, asc) {
+    return readyPromise.then(function () { return cloudReadNow(table, order, asc); });
+  }
+
+  function cloudReadNow(table, order, asc) {
     if (MODE !== 'supabase') return Promise.resolve(null);
     return sb.from(table).select('*').order(order, { ascending: !!asc })
       .then(function (r) { if (r.error) throw r.error; return r.data || []; })
@@ -235,14 +246,30 @@
     { id: 'p-filament-clip', name: 'Filament Spool Clips (5)', category: 'Shop & Tools', price: 5, blurb: 'Keeps loose ends from tangling.', img: '', batch: true, grams: 8, hours: 0.4, tags: 'quick' }
   ];
 
-  /* ---- products ---- */
+  /* ---- products ----
+     The sample catalog is DEMO DATA. It exists so the site is clickable
+     before you have added anything. Once a real database is connected it
+     must never be substituted for an empty catalog — a live shop showing
+     twelve products it does not sell is worse than showing none. */
+  var PRODUCT_SOURCE = 'none';   // cloud | local | demo | empty
+
   var Products = {
+    source: function () { return PRODUCT_SOURCE; },
+    demoRows: function () { return SEED_PRODUCTS.slice(); },
+
     list: function () {
-      return (MODE === 'supabase' ? cloudRead('products', 'name', true) : Promise.resolve(null))
+      return cloudRead('products', 'name', true)
         .then(function (cloud) {
-          if (cloud && cloud.length) { localSave('products', cloud); return cloud; }
+          if (cloud) {                                  // connected, read succeeded
+            localSave('products', cloud);
+            PRODUCT_SOURCE = cloud.length ? 'cloud' : 'empty';
+            return cloud;
+          }
           var rows = localList('products');
-          return rows && rows.length ? rows : SEED_PRODUCTS;
+          if (rows && rows.length) { PRODUCT_SOURCE = 'local'; return rows; }
+          if (MODE === 'supabase') { PRODUCT_SOURCE = 'empty'; return []; }
+          PRODUCT_SOURCE = 'demo';                      // offline demo only
+          return SEED_PRODUCTS;
         });
     },
     save: function (rows) {
@@ -252,11 +279,20 @@
       });
     },
     remove: function (id) {
-      var rows = (localList('products') || SEED_PRODUCTS).filter(function (p) { return p.id !== id; });
+      var rows = (localList('products') || []).filter(function (p) { return p.id !== id; });
       localSave('products', rows);
       return cloudWrite({ table: 'products', op: 'delete', id: id }).then(function () { return rows; });
     },
-    seed: function () { localSave('products', SEED_PRODUCTS.slice()); return SEED_PRODUCTS.slice(); }
+
+    /* Explicit, owner-initiated. Writes the samples to the database so they
+       are real rows you can edit or delete — not phantoms. */
+    loadSamples: function () {
+      var rows = SEED_PRODUCTS.slice();
+      localSave('products', rows);
+      PRODUCT_SOURCE = MODE === 'supabase' ? 'cloud' : 'local';
+      return cloudWrite({ table: 'products', op: 'upsert', rows: rows })
+        .then(function (r) { return { rows: rows, synced: r.synced, reason: r.reason }; });
+    }
   };
 
   /* ---- requests (custom designs, idea modeler, order lists) ---- */
@@ -275,7 +311,7 @@
       });
     },
     list: function () {
-      return (MODE === 'supabase' ? cloudRead('requests', 'created_at', false) : Promise.resolve(null))
+      return cloudRead('requests', 'created_at', false)
         .then(function (cloud) {
           if (cloud) {
             // merge anything still sitting in the outbox so the admin page
@@ -316,7 +352,7 @@
       });
     },
     list: function () {
-      return (MODE === 'supabase' ? cloudRead('quotes', 'created_at', false) : Promise.resolve(null))
+      return cloudRead('quotes', 'created_at', false)
         .then(function (cloud) { return cloud || localList('quotes') || []; });
     },
     update: function (id, patch) {
@@ -351,7 +387,12 @@
      ========================================================= */
   var Settings = {
     get: function (key) {
-      if (MODE !== 'supabase') return Promise.resolve(null);
+      return readyPromise.then(function () {
+        if (MODE !== 'supabase') return null;
+        return Settings._get(key);
+      });
+    },
+    _get: function (key) {
       return sb.from('settings').select('value').eq('key', key).maybeSingle()
         .then(function (r) {
           if (r.error) throw r.error;
@@ -762,8 +803,12 @@
   var Auth = {
     enabled: function () { return MODE === 'supabase'; },
     user: function () {
-      if (MODE !== 'supabase') return Promise.resolve(null);
-      return sb.auth.getSession().then(function (r) { return (r.data && r.data.session && r.data.session.user) || null; });
+      return readyPromise.then(function () {
+        if (MODE !== 'supabase') return null;
+        return sb.auth.getSession().then(function (r) {
+          return (r.data && r.data.session && r.data.session.user) || null;
+        });
+      });
     },
     signIn: function (email, password) {
       if (MODE !== 'supabase') return Promise.reject(new Error('Supabase not configured'));

@@ -50,7 +50,11 @@
   function render() {
     var rows = sorted(ALL.filter(matches));
     A.$('#grid').innerHTML = rows.map(card).join('');
+    var nothingAtAll = ALL.length === 0;
     A.$('#noresults').classList.toggle('hide', rows.length > 0);
+    A.$('#noresults').textContent = nothingAtAll
+      ? 'The catalog is still being set up — get in touch and I will tell you what I have on hand.'
+      : 'No items match that.';
 
     A.$$('#grid .thumb').forEach(function (t) {
       t.addEventListener('click', function () { A.lightbox(t.dataset.img, t.dataset.cap); });
@@ -95,6 +99,11 @@
     ALL = rows;
     buildCats();
     render();
+    // Hide the filter panel entirely when there is nothing to filter.
+    if (!rows.length) {
+      var panel = A.$('#q').closest('.panel');
+      if (panel) panel.classList.add('hide');
+    }
   });
 
   A.$('#q').addEventListener('input', A.debounce(render, 140));
