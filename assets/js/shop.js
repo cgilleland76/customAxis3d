@@ -57,10 +57,10 @@
       return '<div class="slot" data-pid="' + A.esc(p.id) + '" data-slot="' + s.index + '">' +
         '<span class="slot-label">' + A.esc(s.label) + '</span>' +
         '<button type="button" class="cbtn" id="' + A.esc(id) + '"' +
-          ' aria-haspopup="listbox" aria-expanded="false">' +
+          ' aria-haspopup="listbox" aria-expanded="false"' +
+          ' title="' + A.esc(f ? (f.name + (f.brand ? ' — ' + f.brand : '')) : '') + '">' +
           '<span class="sw" style="background:' + A.esc(f ? f.hex : '#888') + '"></span>' +
           '<span class="cname">' + A.esc(f ? f.name : 'Pick a colour') + '</span>' +
-          '<span class="cbrand">' + A.esc(f && f.brand ? f.brand : '') + '</span>' +
           '<span class="carr" aria-hidden="true">&#9662;</span>' +
         '</button>' +
         '<ul class="clist hide" role="listbox" aria-labelledby="' + A.esc(id) + '">' +
@@ -151,7 +151,7 @@
         var btn = slot.querySelector('.cbtn');
         btn.querySelector('.sw').style.background = f.hex;
         btn.querySelector('.cname').textContent = f.name;
-        btn.querySelector('.cbrand').textContent = f.brand || '';
+        btn.title = f.name + (f.brand ? ' — ' + f.brand : '');
         slot.querySelectorAll('[data-fil]').forEach(function (o) {
           var on = o === li;
           o.classList.toggle('on', on);

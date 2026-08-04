@@ -378,16 +378,19 @@ footer.site .legal{border-top:1px solid var(--border);margin-top:26px;padding-to
 /* colour slots on product cards */
 .colours{margin-top:10px}
 .slot{display:flex;align-items:center;gap:8px;margin-bottom:7px;position:relative}
-.slot-label{font-size:11px;color:var(--muted);min-width:62px;flex:none}
 .sw{width:18px;height:18px;flex:none;border-radius:50%;
     border:1px solid var(--border);background-clip:padding-box}
 .cbtn{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:34px;
       padding:0 9px;font-size:12.5px;text-align:left;cursor:pointer;
       background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text)}
 .cbtn:hover{border-color:var(--accent)}
-.cname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cbrand{color:var(--dim);font-size:11px;margin-left:auto;white-space:nowrap}
-.carr{color:var(--muted);flex:none}
+.cname{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbrand{color:var(--dim);font-size:11px;margin-left:auto;white-space:nowrap;flex:0 1 auto;
+        overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.carr{color:var(--muted);flex:none;margin-left:4px}
+.slot-label{font-size:11px;color:var(--muted);min-width:52px;max-width:52px;flex:none;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clist{left:60px}
 .clist{position:absolute;z-index:40;left:70px;right:0;top:36px;max-height:270px;overflow:auto;
        margin:0;padding:4px;list-style:none;background:var(--panel);
        border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:0 10px 26px rgba(0,0,0,.45)}
@@ -402,3 +405,4 @@ footer.site .legal{border-top:1px solid var(--border);margin-top:26px;padding-to
        border-radius:3px;padding:1px 5px}
 .lead{margin-top:8px;font-size:12px;padding:7px 9px;border-radius:var(--r-sm);
       background:rgba(239,159,39,.12);color:#EF9F27;border:1px solid rgba(239,159,39,.3)}
+.legal .build{font-size:10.5px;opacity:.62}

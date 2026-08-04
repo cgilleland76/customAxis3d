@@ -723,6 +723,11 @@
           '<span>© ' + new Date().getFullYear() + ' ' + esc(CFG.brand || 'AXIS3D') + '</span>' +
           '<span id="dbmode" class="badge-live off"><i></i>storage: local</span>' +
           '<span class="chip amber hide" data-outbox-count title="Items saved here but not yet uploaded. They retry automatically.">0</span>' +
+          '<span class="chip mono build" title="When this version of the site was pushed. Compare with the time you pushed to confirm the deploy landed.">' +
+            esc((window.APP_BUILD && window.APP_BUILD.at) || 'dev') +
+            ((window.APP_BUILD && window.APP_BUILD.ref && window.APP_BUILD.ref !== 'local')
+              ? ' · ' + esc(window.APP_BUILD.ref) : '') +
+          '</span>' +
           '<a href="admin.html" class="dim">Shop tools</a>' +
         '</div></div>';
     }

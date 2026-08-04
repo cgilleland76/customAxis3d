@@ -76,13 +76,12 @@ def score(row, brand, name, material):
 
     cname = norm(row.get("color_name"))
     want = norm(name)
-    s = 0
-    if cname == want:
-        s += 100
-    elif want and want in cname:
-        s += 60          # "Yellow" inside "Silk Dark Yellow" -- plausible but weaker
-    else:
+    if cname != want:
+        # Substring matching is a trap for short names: "red" sits inside
+        # "Red/Green Silk" and "blue" inside "Sky Blue", both of which are
+        # entirely different filaments. Only an exact name is trustworthy.
         return -1
+    s = 100
 
     ftype = row.get("filament_type") or {}
     tname = norm(ftype.get("name"))
@@ -95,10 +94,11 @@ def score(row, brand, name, material):
     else:
         s -= 20
 
-    # Prefer a plain colour over a special finish unless asked for one
-    if any(k in cname for k in ("silk", "matte", "glow", "glitter", "sparkle")) \
-            and not any(k in want for k in ("silk", "matte", "glow", "glitter", "sparkle")):
-        s -= 45
+    # Prefer a plain finish unless the spool name says otherwise
+    ftname = norm(ftype.get("name"))
+    special = ("silk", "matte", "glow", "glitter", "sparkle", "marble", "wood")
+    if any(k in ftname for k in special) and not any(k in want for k in special):
+        s -= 60
     if row.get("published"):
         s += 5
     return s
@@ -160,7 +160,7 @@ def main():
         label = f"{f.get('brand') or '-'} {f['name']} ({f.get('material')})"
         m = best_match(f.get("brand") or "", f["name"], f.get("material") or "PLA", cache)
         if not m:
-            print(f"  ?  {label:38} no confident match — leaving {f['hex']}")
+            print(f"  ?  {label:38} no exact name match — leaving {f['hex']}")
             misses += 1
             continue
 
