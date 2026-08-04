@@ -223,7 +223,7 @@ def _slots(spec: dict, record: dict):
     fils = [f for f in spec.get("filaments", []) if (f.get("used_g") or 0) > 0]
     if not fils:
         return None
-    override = (record.get("meta_slots") or [])
+    override = [str(x) for x in (record.get("slot_labels") or []) if str(x).strip()]
     out = []
     for i, f in enumerate(fils):
         label = override[i] if i < len(override) else (

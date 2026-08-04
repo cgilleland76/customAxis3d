@@ -130,7 +130,18 @@ def build_one(target: Path, cfg: dict, dry_run: bool = False) -> dict:
         "slicer_previews": [Path(p).name for p in spec.thumbnails],
         "variants": cfg.get("variants", []),
         "file_hashes": hashes,
+        "slot_labels": meta.get("slots") or [],
     }
+
+    used = [f for f in spec.filaments if f.used_g > 0]
+    labels = record["slot_labels"]
+    if labels:
+        if len(labels) != len(used):
+            print(f"  ! product.yml lists {len(labels)} slot name(s) but the file "
+                  f"uses {len(used)}; extras fall back to 'Colour N'")
+        for i, f in enumerate(used):
+            name = labels[i] if i < len(labels) else f"Colour {i + 1}"
+            print(f"  slot {f.index}: {name:<16} {f.color or '-':<9} {f.used_g:>7.2f} g")
 
     if meta.get("dimensions"):
         record["spec"]["dimensions_human"] = str(meta["dimensions"])
