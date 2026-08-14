@@ -314,6 +314,115 @@
     });
   }
 
+
+  /* ---------------- categories ---------------- */
+  var cats = [];
+
+  function usageCount(name) {
+    return products.filter(function (p) { return (p.category || '') === name; }).length;
+  }
+  function unlistedNames() {
+    var known = {};
+    cats.forEach(function (c) { known[c.name] = 1; });
+    var out = {};
+    products.forEach(function (p) {
+      var n = p.category || '';
+      if (n && !known[n]) out[n] = (out[n] || 0) + 1;
+    });
+    return out;
+  }
+
+  function drawCats() {
+    A.$('#catRows').innerHTML = '<table><thead><tr><th style="width:34px"></th><th>Name</th>' +
+      '<th>Blurb shown on the catalog</th><th class="num">In use</th><th>Shown</th><th></th></tr></thead><tbody>' +
+      cats.map(function (c, i) {
+        var n = usageCount(c.name);
+        return '<tr>' +
+          '<td style="white-space:nowrap">' +
+            '<button class="btn ghost sm" data-cmv="up" data-i="' + i + '" title="Move up"' + (i === 0 ? ' disabled' : '') + '>↑</button>' +
+            '<button class="btn ghost sm" data-cmv="down" data-i="' + i + '" title="Move down"' + (i === cats.length - 1 ? ' disabled' : '') + '>↓</button>' +
+          '</td>' +
+          '<td><input data-c="name" data-i="' + i + '" type="text" value="' + A.esc(c.name) + '"></td>' +
+          '<td><input data-c="blurb" data-i="' + i + '" type="text" value="' + A.esc(c.blurb || '') + '"></td>' +
+          '<td class="num mono"' + (n ? '' : ' style="color:var(--dim)"') + '>' + n + '</td>' +
+          '<td><label class="inline"><input type="checkbox" data-c="visible" data-i="' + i + '"' + (c.visible !== false ? ' checked' : '') + '></label></td>' +
+          '<td><button class="btn ghost sm" data-cdel="' + i + '"' + (n ? ' title="' + n + ' product(s) use this"' : '') + '>✕</button></td>' +
+        '</tr>';
+      }).join('') + '</tbody></table>';
+
+    A.$$('#catRows [data-c]').forEach(function (inp) {
+      var ev = inp.type === 'checkbox' ? 'change' : 'input';
+      inp.addEventListener(ev, function () {
+        var c = cats[+inp.dataset.i];
+        if (inp.dataset.c === 'visible') c.visible = inp.checked;
+        else c[inp.dataset.c] = inp.value;
+        if (inp.dataset.c === 'name') c.id = A.slug(inp.value);
+      });
+    });
+    A.$$('#catRows [data-cmv]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var i = +b.dataset.i, j = b.dataset.cmv === 'up' ? i - 1 : i + 1;
+        if (j < 0 || j >= cats.length) return;
+        var t = cats[i]; cats[i] = cats[j]; cats[j] = t;
+        drawCats();
+      });
+    });
+    A.$$('#catRows [data-cdel]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var c = cats[+b.dataset.cdel], n = usageCount(c.name);
+        if (n && !confirm(n + ' product(s) still use "' + c.name + '".\n\nThey will keep showing on the catalog, grouped at the bottom and flagged as unlisted. Remove the category anyway?')) return;
+        cats.splice(+b.dataset.cdel, 1);
+        drawCats();
+      });
+    });
+
+    var extra = unlistedNames();
+    var keys = Object.keys(extra);
+    A.$('#cat_adopt').disabled = keys.length === 0;
+    A.$('#cat_adopt').textContent = keys.length
+      ? 'Adopt ' + keys.length + ' unlisted (' + keys.join(', ').slice(0, 40) + ')'
+      : 'Adopt unlisted';
+  }
+
+  A.$('#cat_add').addEventListener('click', function () {
+    cats.push({ id: 'new', name: 'New category', blurb: '', visible: true });
+    drawCats();
+  });
+
+  /* Pull in any category a product.yml introduced that is not on the list yet. */
+  A.$('#cat_adopt').addEventListener('click', function () {
+    var extra = unlistedNames();
+    Object.keys(extra).sort().forEach(function (n) {
+      cats.push({ id: A.slug(n), name: n, blurb: '', visible: true });
+    });
+    drawCats();
+  });
+
+  A.$('#cat_save').addEventListener('click', function () {
+    var names = {}, dupe = null, blank = false;
+    cats.forEach(function (c) {
+      c.name = (c.name || '').trim();
+      if (!c.name) blank = true;
+      else if (names[c.name]) dupe = c.name;
+      names[c.name] = 1;
+    });
+    if (blank)  { catMsg('err', 'A category has no name.'); return; }
+    if (dupe)   { catMsg('err', 'Two categories are both called "' + A.esc(dupe) + '". Names must be unique — products match on the name.'); return; }
+    cats.forEach(function (c) { c.id = c.id && c.id !== 'new' ? c.id : A.slug(c.name); });
+    A.Bands && null;
+    A.Categories.save(cats).then(function (res) {
+      catMsg(res.synced ? 'info' : '', res.synced
+        ? 'Saved. The catalog groups in this order straight away.'
+        : 'Saved on this device. It publishes once the connection is back.');
+      drawCats();
+    });
+  });
+
+  function catMsg(kind, html) {
+    A.$('#cat_msg').innerHTML = '<div class="notice ' + (kind === 'err' ? 'err' : kind) + '"><span>' +
+      (kind === 'err' ? '⚠' : '✓') + '</span><div>' + html + '</div></div>';
+  }
+
   /* ---------------- rates ---------------- */
   var RM = { r_fil: 'filamentPerKg', r_watts: 'watts', r_kwh: 'kwhPrice', r_markup: 'markup', r_hourly: 'hourlyRate', r_flat: 'flatFee' };
   function loadRates() {
@@ -565,7 +674,10 @@
     A.ready.then(function () {
       drawStats(); drawReqs(); loadRates(); drawQuotes(); drawSetup();
       A.Bands.load().then(function (b) { bands = (b || []).slice(); drawBands(); });
-      A.Products.list().then(function (rows) { products = rows.slice(); drawProducts(); pForm(null); });
+      A.Products.list().then(function (rows) {
+        products = rows.slice(); drawProducts(); pForm(null);
+        A.Categories.load().then(function (c) { cats = (c || []).slice(); drawCats(); });
+      });
       A.Filaments.list().then(function (rows) { filaments = rows.slice(); drawFilaments(); fForm(null); });
     });
   }

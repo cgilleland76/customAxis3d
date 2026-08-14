@@ -15,6 +15,18 @@
   var specId = 'IDEA-' + A.uid().slice(-6).toUpperCase();
   var genImage = null;
 
+  /* Category picker mirrors how you actually file things, so a customer's
+     wording lines up with your taxonomy instead of inventing new buckets. */
+  A.Categories.load().then(function (cats) {
+    var sel = A.$('#cat');
+    if (!sel) return;
+    var keep = sel.value;
+    sel.innerHTML = '<option value="">— pick one —</option>' +
+      A.Categories.visible(cats).map(function (c) { return '<option>' + A.esc(c.name) + '</option>'; }).join('') +
+      '<option>Something else</option>';
+    if (keep) sel.value = keep;
+  });
+
   /* ---------- chips ---------- */
   function chips(hostId, items, name) {
     A.$('#' + hostId).innerHTML = items.map(function (t, i) {

@@ -54,6 +54,27 @@ window.SITE = {
     { maxIn: 12,  label: '9 to 12 in',  low: 45, high: 75 },
     { maxIn: 999, label: 'Over 12 in',  low: 75, high: 140 }
   ],
+  /* ---- Categories --------------------------------------------
+     Canonical public taxonomy. Products carry the category NAME
+     (the pipeline writes it from product.yml), so these names and
+     the ones in your product.yml files must match. Edit the live
+     list in Shop tools -> Catalog -> Categories; this block is
+     only the fallback before the database answers.               */
+  categories: [
+    { id: 'games',   name: 'Games',                 blurb: 'Trackers, dice towers, tabletop bits.',      visible: true },
+    { id: 'gifts',   name: 'Gifts',                 blurb: 'Keepsakes, toppers, one-off presents.',      visible: true },
+    { id: 'props',   name: 'Props',                 blurb: 'Wands, replicas, costume pieces.',           visible: true },
+    { id: 'signs',   name: 'Signs & Lettering',     blurb: 'Names, initials, door signs, word art.',     visible: true },
+    { id: 'cards',   name: 'Cards & Wallets',       blurb: 'Tap-to-pay holders and card caddies.',       visible: true },
+    { id: 'toys',    name: 'Toys, Figures & Art',   blurb: 'Fidgets, articulated prints, desk pieces.',  visible: true },
+    { id: 'storage', name: 'Storage & Organization',blurb: 'Bins, drawer inserts, gridfinity, trays.',   visible: true },
+    { id: 'desk',    name: 'Desk & Organizer',      blurb: 'Stands, hooks, cable management.',           visible: true },
+    { id: 'home',    name: 'Home & Decor',          blurb: 'Planters, hooks, things around the house.',  visible: true },
+    { id: 'kitchen', name: 'Kitchen',               blurb: 'Food-safe PETG cutters and gadgets.',        visible: true },
+    { id: 'printer', name: '3D Printer Gear',       blurb: 'Toolbox inserts, spool clips, printer mods.',visible: true },
+    { id: 'tools',   name: 'Shop & Tools',          blurb: 'Jigs, trays, workshop fixtures.',            visible: true }
+  ],
+
   bandNote: 'Estimate only — the exact price is set in person once we agree on size, colour and finish.',
 
   /* ---- Phase 2 hook ----------------------------------------

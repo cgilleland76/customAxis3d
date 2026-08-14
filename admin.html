@@ -64,6 +64,7 @@
     <div class="tabs">
       <button data-t="requests" class="on">Incoming</button>
       <button data-t="products">Catalog</button>
+      <button data-t="categories">Categories</button>
       <button data-t="filaments">Filament</button>
       <button data-t="rates">Pricing</button>
       <button data-t="quotes">Jobs</button>
@@ -120,6 +121,26 @@
     </section>
 
     <!-- Catalog -->
+    <!-- Categories -->
+    <section data-p="categories" class="hide">
+      <div class="notice info" style="margin-bottom:16px">
+        <span>ⓘ</span>
+        <div>Products carry a category <strong>name</strong>, written from <span class="mono">product.yml</span> by the pipeline. Names here must match those exactly. Anything a product uses that is not listed still shows on the catalog, grouped last and flagged <span class="chip amber">unlisted</span> — a typo can never hide stock.</div>
+      </div>
+      <div class="panel" style="max-width:760px">
+        <h2>Categories</h2>
+        <p class="hint" style="margin-top:0">Order here is the order customers browse in. Hide one to keep its products off the catalog without deleting anything.</p>
+        <div class="table-scroll"><div id="catRows"></div></div>
+        <div class="rowflex" style="margin-top:12px">
+          <button class="btn" id="cat_save">Save categories</button>
+          <button class="btn ghost" id="cat_add">Add a category</button>
+          <button class="btn ghost" id="cat_adopt">Adopt unlisted</button>
+        </div>
+        <div id="cat_msg" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+
     <section data-p="products" class="hide">
       <div class="panel" style="margin-bottom:16px">
         <h2 id="pfTitle">Add a product</h2>

@@ -350,3 +350,21 @@ create policy "owner manages filaments"
   on public.filaments for all to authenticated using (true) with check (true);
 
 create index if not exists filaments_stock_idx on public.filaments (in_stock, sort);
+
+-- Public category taxonomy. Edit it in Shop tools -> Catalog -> Categories.
+insert into public.settings (key, value, is_public) values
+  ('categories', '[
+     {"id":"games","name":"Games","blurb":"Trackers, dice towers, tabletop bits.","visible":true},
+     {"id":"gifts","name":"Gifts","blurb":"Keepsakes, toppers, one-off presents.","visible":true},
+     {"id":"props","name":"Props","blurb":"Wands, replicas, costume pieces.","visible":true},
+     {"id":"signs","name":"Signs & Lettering","blurb":"Names, initials, door signs, word art.","visible":true},
+     {"id":"cards","name":"Cards & Wallets","blurb":"Tap-to-pay holders and card caddies.","visible":true},
+     {"id":"toys","name":"Toys, Figures & Art","blurb":"Fidgets, articulated prints, desk pieces.","visible":true},
+     {"id":"storage","name":"Storage & Organization","blurb":"Bins, drawer inserts, gridfinity, trays.","visible":true},
+     {"id":"desk","name":"Desk & Organizer","blurb":"Stands, hooks, cable management.","visible":true},
+     {"id":"home","name":"Home & Decor","blurb":"Planters, hooks, things around the house.","visible":true},
+     {"id":"kitchen","name":"Kitchen","blurb":"Food-safe PETG cutters and gadgets.","visible":true},
+     {"id":"printer","name":"3D Printer Gear","blurb":"Toolbox inserts, spool clips, printer mods.","visible":true},
+     {"id":"tools","name":"Shop & Tools","blurb":"Jigs, trays, workshop fixtures.","visible":true}
+   ]'::jsonb, true)
+on conflict (key) do nothing;

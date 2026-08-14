@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var A = window.APP;
-  var ALL = [], cat = 'All';
+  var ALL = [], CATS = [], cat = 'All';
 
   function matches(p) {
     var q = A.$('#q').value.trim().toLowerCase();
@@ -118,7 +118,26 @@
 
   function render() {
     var rows = sorted(ALL.filter(matches));
-    A.$('#grid').innerHTML = rows.map(card).join('');
+
+    /* Browsing everything: group under category headings, in the order set in
+       Shop tools. Filtering or searching: one flat grid. Groups render INSIDE
+       #grid so all the colour-picker handlers below still find their targets. */
+    var searching = A.$('#q').value.trim() !== '';
+    var grouped = cat === 'All' && !searching && rows.length > 0;
+    A.$('#grid').classList.toggle('asgroups', grouped);
+    A.$('#grid').innerHTML = grouped
+      ? A.Categories.group(CATS, rows).map(function (g) {
+          return '<section class="catgroup" id="cat-' + A.esc(g.cat.id) + '">' +
+            '<div class="cathead">' +
+              '<h3>' + A.esc(g.cat.name) +
+                (g.cat.unlisted ? ' <span class="chip amber">unlisted</span>' : '') + '</h3>' +
+              (g.cat.blurb ? '<p>' + A.esc(g.cat.blurb) + '</p>' : '') +
+              '<span class="count mono">' + g.rows.length + '</span>' +
+            '</div>' +
+            '<div class="products">' + g.rows.map(card).join('') + '</div>' +
+          '</section>';
+        }).join('')
+      : rows.map(card).join('');
     var nothingAtAll = ALL.length === 0;
     A.$('#noresults').classList.toggle('hide', rows.length > 0);
     A.$('#noresults').textContent = nothingAtAll
@@ -200,6 +219,12 @@
 
   function buildCats() {
     var seen = {}, list = ['All'];
+    /* managed categories first, in your order; then anything a product uses
+       that is not in the list, so a YAML typo never hides stock */
+    A.Categories.visible(CATS).forEach(function (c) {
+      var used = ALL.some(function (p) { return (p.category || '') === c.name; });
+      if (used && !seen[c.name]) { seen[c.name] = 1; list.push(c.name); }
+    });
     ALL.forEach(function (p) { if (p.category && !seen[p.category]) { seen[p.category] = 1; list.push(p.category); } });
     A.$('#cats').innerHTML = list.map(function (c) {
       return '<button data-cat="' + A.esc(c) + '"' + (c === cat ? ' class="on"' : '') + '>' + A.esc(c) + '</button>';
@@ -214,6 +239,8 @@
   }
 
   A.Filaments.list().then(function (f) { FILS = f || []; render(); });
+
+  A.Categories.load().then(function (c) { CATS = c || []; buildCats(); render(); });
 
   A.Products.list().then(function (rows) {
     /* Row level security already hides drafts from anonymous visitors, but two

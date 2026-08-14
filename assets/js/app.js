@@ -497,6 +497,57 @@
   };
 
   /* =========================================================
+     CATEGORIES  —  PUBLIC taxonomy, owner-managed.
+     Products store the category NAME (the pipeline writes it from
+     product.yml). Anything whose category is not in this list is
+     still shown, grouped last and flagged, so a typo in a YAML file
+     can never make stock disappear from the site.
+     ========================================================= */
+  function slug(str) {
+    return String(str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cat';
+  }
+
+  var Categories = {
+    load: function () {
+      return Settings.get('categories').then(function (v) {
+        var list = (v && v.length) ? v : (CFG.categories || []);
+        return list.map(function (c, i) {
+          return {
+            id: c.id || slug(c.name || ('cat' + i)),
+            name: c.name || '',
+            blurb: c.blurb || '',
+            visible: c.visible !== false
+          };
+        });
+      });
+    },
+    save: function (list) { return Settings.set('categories', list, true); },
+    visible: function (list) { return (list || []).filter(function (c) { return c.visible !== false; }); },
+
+    /* -> [{ cat, rows }] in the owner's chosen order, unlisted ones last */
+    group: function (list, products) {
+      var groups = [], claimed = {};
+      Categories.visible(list).forEach(function (c) {
+        var rows = products.filter(function (p) { return (p.category || '') === c.name; });
+        claimed[c.name] = true;
+        if (rows.length) groups.push({ cat: c, rows: rows });
+      });
+      var orphans = products.filter(function (p) { return !claimed[p.category || '']; });
+      if (orphans.length) {
+        var names = {};
+        orphans.forEach(function (p) { names[p.category || 'Uncategorised'] = true; });
+        Object.keys(names).sort().forEach(function (n) {
+          groups.push({
+            cat: { id: slug(n), name: n, blurb: '', visible: true, unlisted: true },
+            rows: orphans.filter(function (p) { return (p.category || 'Uncategorised') === n; })
+          });
+        });
+      }
+      return groups;
+    }
+  };
+
+  /* =========================================================
      PRICE BANDS  —  PUBLIC.
      Already-marked-up prices. Nothing here reveals cost.
      ========================================================= */
@@ -876,7 +927,7 @@
     today: today, stamp: stamp, fmtTime: fmtTime, debounce: debounce, qs: qs,
     lsGet: lsGet, lsSet: lsSet, toast: toast, placeholderSVG: placeholderSVG,
     Products: Products, Filaments: Filaments, Requests: Requests, Quotes: Quotes, Rates: Rates, List: List, Auth: Auth,
-    Settings: Settings, Bands: Bands,
+    Settings: Settings, Bands: Bands, Categories: Categories, slug: slug,
     Setup: Setup, Outbox: Outbox, lastError: function () { return LAST_ERROR; },
     lightbox: lightbox, downloadCSV: downloadCSV, renderChrome: renderChrome, gate: gate,
     SEED_PRODUCTS: SEED_PRODUCTS

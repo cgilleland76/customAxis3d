@@ -69,6 +69,95 @@
       }
     },
 
+    'cake-topper': {
+      icon: '🎂', label: 'Cake Topper',
+      title: 'Cake topper',
+      coverage: 0.20, ratio: 1.0,
+      note: 'Spikes go into the cake. Wash before use or sleeve them in a cut straw — printed layer lines trap bacteria and are not dishwasher safe.',
+      fields: [
+        { id: 'name', label: 'Name or word', type: 'text', value: 'Anna', max: 20, req: true },
+        { id: 'cake', label: 'Cake size', type: 'choices', value: '8', opts: [
+            { id: '6',  label: '6 inch' }, { id: '8',  label: '8 inch' },
+            { id: '10', label: '10 inch' }, { id: '12', label: '12 inch' } ] },
+        { id: 'scriptFont', label: 'Lettering', type: 'choices', opts: SCRIPT_FONTS, value: "'Great Vibes',cursive" },
+        { id: 'spikes', label: 'Two 50 mm spikes', type: 'check', value: true }
+      ],
+      /* From the generator notes: topper width = cake diameter x 0.60,
+         lettering capped so short names do not tower, spikes add ~49 mm. */
+      sizeFor: function (S) {
+        var cakeIn = parseFloat(S.cake) || 8;
+        var widthIn = cakeIn * 0.60;
+        var letterIn = widthIn * 0.47;
+        var totalIn = letterIn + (S.spikes ? 49 / 25.4 : 0);
+        return { long: widthIn, short: totalIn, th: 4 / 25.4, letterIn: letterIn };
+      },
+      render: function (s) {
+        var W = 560, H = 420;
+        var t = s.name || '';
+        var fs = Math.max(34, Math.min(150, 470 / Math.max(3, t.length) * 1.85));
+        var out = '<text x="280" y="150" text-anchor="middle" dominant-baseline="middle" ' +
+          'font-family="' + s.scriptFont + '" font-weight="700" font-size="' + fs + '" ' +
+          'fill="' + s.c2 + '" stroke="' + s.c1 + '" stroke-width="' + (fs * 0.05).toFixed(1) +
+          '" paint-order="stroke">' + A.esc(t) + '</text>';
+        if (s.spikes) {
+          [200, 360].forEach(function (x) {
+            out += '<path d="M' + (x - 11) + ' 210 L' + (x + 11) + ' 210 L' + (x + 3) + ' 380 L' + (x - 3) + ' 380 Z" fill="' + s.c1 + '"/>';
+          });
+          out += '<line x1="120" y1="380" x2="440" y2="380" stroke="' + s.c2 +
+                 '" stroke-width="2" stroke-dasharray="6 6" opacity=".45"/>' +
+                 '<text x="280" y="400" text-anchor="middle" font-family="ui-monospace,monospace" ' +
+                 'font-size="13" fill="' + s.c2 + '" opacity=".55">cake surface</text>';
+        }
+        return wrap(W, H, out);
+      }
+    },
+
+    'tap-to-pay': {
+      icon: '▤', label: 'Tap-to-Pay Card Holder',
+      title: 'Tap-to-pay holder',
+      coverage: 0.78, ratio: 1.55,
+      needsImage: true,
+      note: 'Snaps together with barbed clips — no glue. Your contactless card drops in and still reads through the shell.',
+      fields: [
+        { id: 'art', label: 'Logo or photo to shape it from', type: 'image', req: true },
+        { id: 'holderW', label: 'Overall width (inches)', type: 'range', min: 3.9, max: 7, step: 0.1, value: 4.4 },
+        { id: 'badge', label: 'Small text on the front (optional)', type: 'text', value: '', max: 14 },
+        { id: 'keyring', label: 'Add a key-ring loop', type: 'check', value: false }
+      ],
+      sizeFor: function (S) {
+        var w = Math.max(3.9, parseFloat(S.holderW) || 4.4);
+        return { long: w, short: w / 1.55, th: 4 / 25.4 };
+      },
+      render: function (s) {
+        var W = 600, H = 400;
+        var out = '<rect x="40" y="40" width="520" height="320" rx="26" fill="' + s.c1 + '"/>';
+        if (s.art) {
+          out += '<clipPath id="cp"><rect x="52" y="52" width="496" height="296" rx="20"/></clipPath>' +
+                 '<image href="' + s.art + '" x="52" y="52" width="496" height="296" ' +
+                 'preserveAspectRatio="xMidYMid meet" clip-path="url(#cp)"/>';
+        } else {
+          out += '<text x="300" y="190" text-anchor="middle" font-family="ui-monospace,monospace" ' +
+                 'font-size="15" fill="' + s.c2 + '" opacity=".7">upload a logo or photo</text>' +
+                 '<text x="300" y="214" text-anchor="middle" font-family="ui-monospace,monospace" ' +
+                 'font-size="12" fill="' + s.c2 + '" opacity=".45">the outline gets traced from it</text>';
+        }
+        /* contactless card, 85.6 x 54 mm, to scale against the holder width */
+        var wIn = Math.max(3.9, parseFloat(s.holderW) || 4.4);
+        var cardW = 520 * (3.370 / wIn), cardH = cardW * (54 / 85.6);
+        out += '<rect x="' + (300 - cardW / 2).toFixed(0) + '" y="' + (200 - cardH / 2).toFixed(0) + '" ' +
+               'width="' + cardW.toFixed(0) + '" height="' + cardH.toFixed(0) + '" rx="10" fill="none" ' +
+               'stroke="' + s.c2 + '" stroke-width="3" stroke-dasharray="9 7" opacity=".9"/>' +
+               '<text x="300" y="' + (200 + cardH / 2 + 20).toFixed(0) + '" text-anchor="middle" ' +
+               'font-family="ui-monospace,monospace" font-size="12" fill="' + s.c2 + '" opacity=".75">card cavity</text>';
+        if (s.badge) {
+          out += '<text x="300" y="336" text-anchor="middle" font-family="\'Inter\',sans-serif" ' +
+                 'font-weight="800" font-size="22" fill="' + s.c2 + '">' + A.esc(s.badge) + '</text>';
+        }
+        if (s.keyring) out += '<circle cx="66" cy="66" r="13" fill="none" stroke="' + s.c2 + '" stroke-width="5"/>';
+        return wrap(W, H, out);
+      }
+    },
+
     'nameplate': {
       icon: '▭', label: 'Name Plate / Desk Sign',
       title: 'Name plate',
@@ -183,6 +272,29 @@
       '<style>@import url("' + FONT_IMPORT + '");</style>' + inner + '</svg>';
   }
 
+  /* Downscale in the browser so a 12 MP phone photo does not become a 12 MB
+     request row. 720 px is plenty to trace an outline from. */
+  function shrinkImage(file) {
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onerror = rej;
+      fr.onload = function () {
+        var img = new Image();
+        img.onerror = rej;
+        img.onload = function () {
+          var max = 720, sc = Math.min(1, max / Math.max(img.width, img.height));
+          var c = document.createElement('canvas');
+          c.width = Math.round(img.width * sc);
+          c.height = Math.round(img.height * sc);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          res(c.toDataURL('image/png'));
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
   /* ---------- state ---------- */
   var typeKey = A.qs('type') && TYPES[A.qs('type')] ? A.qs('type') : 'initial-name';
   var S = {};
@@ -224,6 +336,13 @@
       if (f.type === 'check') {
         return '<label class="inline" style="margin-top:11px"><input type="checkbox" data-f="' + f.id + '"' + (v ? ' checked' : '') + '> ' + A.esc(f.label) + '</label>';
       }
+      if (f.type === 'image') {
+        return '<label class="' + (f.req ? 'req' : '') + '">' + A.esc(f.label) + '</label>' +
+          '<div class="rowflex"><input type="file" id="f_' + f.id + '" data-f="' + f.id + '" accept="image/*" class="hide">' +
+          '<button class="btn ghost sm" type="button" id="pick_' + f.id + '">Choose image</button>' +
+          '<span class="hint" style="margin:0" id="nm_' + f.id + '">' + (S[f.id] ? 'image loaded' : 'no image yet') + '</span></div>' +
+          '<p class="hint">Resized in your browser. A clean shape with a clear outline traces best — busy photos need more work.</p>';
+      }
       if (f.type === 'choices') {
         return '<label>' + A.esc(f.label) + '</label><div class="choices">' + f.opts.map(function (o, i) {
           var id = 'ch_' + f.id + '_' + i;
@@ -234,7 +353,26 @@
       return '';
     }).join('');
 
+    /* image pickers */
+    t.fields.filter(function (f) { return f.type === 'image'; }).forEach(function (f) {
+      var btn = A.$('#pick_' + f.id), inp = A.$('#f_' + f.id);
+      if (!btn || !inp) return;
+      btn.addEventListener('click', function () { inp.click(); });
+      inp.addEventListener('change', function () {
+        var file = inp.files && inp.files[0];
+        if (!file) return;
+        shrinkImage(file).then(function (src) {
+          S[f.id] = src;
+          var nm = A.$('#nm_' + f.id);
+          if (nm) nm.textContent = file.name.slice(0, 28);
+          draw();
+        }).catch(function () { A.toast('Could not read that image', 'err'); });
+        inp.value = '';
+      });
+    });
+
     A.$$('#opts [data-f]').forEach(function (inp) {
+      if (inp.type === 'file') return;
       var ev = inp.type === 'checkbox' || inp.type === 'radio' ? 'change' : 'input';
       inp.addEventListener(ev, function () {
         var f = inp.dataset.f;
@@ -287,6 +425,10 @@
     // long dimension is `height` for signs, width for plates — ratio maps the other side
     var longSide = h, shortSide = h / t.ratio;
     if (typeKey === 'initial-name') { longSide = h; shortSide = h / 1.0; } // roughly square
+    if (t.sizeFor) {                       // types with a real dimensional rule
+      var sz = t.sizeFor(S);
+      longSide = sz.long; shortSide = sz.short; th = sz.th;
+    }
     var area = longSide * shortSide * t.coverage;              // in^2 of actual material footprint
     var volIn3 = area * th;
     var volCm3 = volIn3 * 16.387;
@@ -311,6 +453,11 @@
     A.$('#preview').innerHTML = lastSVG;
 
     var e = estimate();
+    var noteEl = A.$('#typeNote');
+    if (noteEl) {
+      noteEl.textContent = t.note || '';
+      noteEl.classList.toggle('hide', !t.note);
+    }
     A.$('#dims').textContent = e.w.toFixed(1) + '" × ' + e.hh.toFixed(1) + '" × ' + e.th.toFixed(2) + '"';
     A.$('#eGrams').textContent = Math.round(e.grams) + ' g';
     A.$('#eHours').textContent = e.hours.toFixed(1) + ' h';
@@ -325,6 +472,22 @@
     }
 
     var warn = A.$('#warn'), msg = '';
+    if (typeKey === 'cake-topper') {
+      var sz = t.sizeFor(S);
+      /* the generator warns under a 1.2 mm stroke; lettering shrinks as the
+         name gets longer because the width is fixed by the cake size */
+      var nameLen = Math.max(3, String(S.name || '').length);
+      /* Width is fixed by the cake, so a longer name is rendered smaller.
+         Effective glyph height, not the nominal lettering height, is what
+         decides whether the strokes survive printing. */
+      var effIn = Math.min(sz.letterIn, sz.long / (0.55 * nameLen));
+      var strokeMm = effIn * 25.4 * 0.085;
+      if (strokeMm < 1.2) msg = 'Letters get thin at this length — go up a cake size or shorten the word';
+    }
+    if (typeKey === 'tap-to-pay') {
+      if (!S.art) msg = 'Upload a logo or photo — the outline is traced from it';
+      else if ((parseFloat(S.holderW) || 0) < 4.0) msg = 'Under 4 in leaves almost no shell around the card';
+    }
     var name = String(S.name || '');
     if (/wordart|initial-name/.test(typeKey) && /['"]/.test(name)) msg = 'Quotes and apostrophes print fragile';
     if (typeKey === 'wordart' && !S.connect && /Vibes|Dancing|Pacifico/.test(S.scriptFont || '')) msg = 'Cursive needs the connecting rail or letters fall apart';
@@ -358,6 +521,7 @@
     var rec = {
       kind: 'Custom design', type: typeKey, typeLabel: t.label,
       config: JSON.parse(JSON.stringify(S)),
+      art: S.art || '',
       summary: summary(), material: S.material,
       colors: [S.c1, S.c2],
       estGrams: Math.round(e.grams), estHours: +e.hours.toFixed(2),
