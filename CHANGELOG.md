@@ -2,6 +2,24 @@
 
 One entry per Cowork session. Newest first. Keep it to what changed and why.
 
+## 2026-08-14 (later) — Generator toolchain, part one
+
+Rebuilding the model generators as standalone scripts so a request turns into a
+printable file with nothing re-typed by hand.
+
+- `tools/generators/` added: 3MF writer, font-to-polygon conversion, proof
+  renderer, and the cake topper generator restored from the build notes (the
+  original `make_topper.py` was lost with a cleared session folder).
+- Toppers verified watertight across 4 cake sizes x 7 names including accents,
+  hyphens, spaces and ampersands. Widths match the reference table to ~0.5 mm.
+- The extruder derives walls from the cap triangulation's boundary rather than
+  from ring point lists; three earlier approaches left seams. Documented in
+  `tools/generators/README.md` so it does not get "simplified" back.
+- Fonts are never substituted: a missing face raises.
+
+Still to do: `sign.py`, `cardholder.py`, and `make.py` (request -> 3MF + proof
+into the pipeline inbox). Trim the ~0.5 mm dilation overshoot on topper width.
+
 ## 2026-08-14 — Categories, cake toppers, tap-to-pay holders
 
 - **Category manager** in Shop tools: ordered, renameable, blurb, show/hide,
