@@ -295,8 +295,18 @@
     });
   }
 
+  /* ---------- hidden types ----------
+     Ids listed here keep their full definition above but are not offered on
+     the site. Delete an id from this array to bring that type back — nothing
+     else needs changing. Hidden 2026-08-15: undecided whether to build them. */
+  var HIDDEN = ['nameplate', 'keychain', 'doorsign', 'wordart'];
+  function visibleTypes() {
+    return Object.keys(TYPES).filter(function (k) { return HIDDEN.indexOf(k) < 0; });
+  }
+
   /* ---------- state ---------- */
-  var typeKey = A.qs('type') && TYPES[A.qs('type')] ? A.qs('type') : 'initial-name';
+  var typeKey = A.qs('type') && TYPES[A.qs('type')] && HIDDEN.indexOf(A.qs('type')) < 0
+    ? A.qs('type') : 'initial-name';
   var S = {};
 
   function defaults(key) {
@@ -307,7 +317,7 @@
 
   /* ---------- option UI ---------- */
   function renderTypes() {
-    A.$('#types').innerHTML = Object.keys(TYPES).map(function (k) {
+    A.$('#types').innerHTML = visibleTypes().map(function (k) {
       return '<button data-k="' + k + '"' + (k === typeKey ? ' class="on"' : '') + '>' +
         '<span class="big">' + TYPES[k].icon + '</span>' + A.esc(TYPES[k].label) + '</button>';
     }).join('');
