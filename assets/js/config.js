@@ -3,15 +3,58 @@
    ============================================================= */
 window.SITE = {
   /* ---- Branding ---------------------------------------------- */
-  brand:      'Axis3D',            // shop name shown in the header
-  tagline:    'Custom 3D Printing & Fabrication',
-  blurb:      'Functional prints, custom signage, and one-off parts. Built on demand, priced from real slicer data.',
+  brand:      'Third Axis Customs',
+  legalName:  'Third Axis Customs LLC',
+  tagline:    'Shopify apps & custom 3D printing',
+  blurb:      'Third Axis Customs builds Shopify apps for e-commerce teams and prints custom parts and gifts in Bowling Green, KY.',
+  printBlurb: 'Functional prints, custom signage, and one-off parts. Built on demand, priced from real slicer data.',
+  appsBlurb:  'Tools for Shopify merchants, built by someone who runs e-commerce operations every day. Each one fixes a problem I hit at work first.',
   contact: {
     phone: '',                     // e.g. '(555) 010-2030'  (leave '' to hide)
-    email: 'cgilleland76@gmail.com',
+    email: 'cgilleland76@gmail.com',          // 3D-print orders
+    appsEmail: 'support@thirdaxiscustoms.com', // app support
     location: '',                  // e.g. 'Booth 14 — Saturday Market'
     hours: ''
   },
+
+  /* ---- Apps --------------------------------------------------
+     Shown in the Apps section of the home page and the footer.
+     Add, remove or reorder freely. `url` is the app's own site.  */
+  apps: [
+    {
+      name: 'SKU Doctor',
+      url: 'https://skudoctor.thirdaxiscustoms.com',
+      platform: 'Shopify app',
+      tagline: 'Find and fix catalog problems before they cost you money.',
+      points: [
+        'Flags prices below cost, missing weights, duplicate SKUs and thin margins',
+        'Checks weights, costs and barcodes against ShipHero, Veeqo or Cin7 Core',
+        'Builds wholesale line sheets as a print-ready PDF or spreadsheet'
+      ]
+    },
+    {
+      name: 'Third Axis Wholesale Sync',
+      url: 'https://app.thirdaxiscustoms.com',
+      platform: 'Shopify app',
+      tagline: 'Keep a wholesale store in step with your main Shopify store.',
+      points: [
+        'Copies products, prices and inventory one way, from the catalogs you pick',
+        'Sets wholesale prices by rule or by SKU',
+        'Previews every change before it is written'
+      ]
+    },
+    {
+      name: 'KitForge',
+      url: 'https://kitforge.thirdaxiscustoms.com',
+      platform: 'Branded merch',
+      tagline: 'Turn a company logo into products that sell, with a commission on each sale.',
+      points: [
+        'Pick a blank product, upload a logo and name the design',
+        'Builds the listing with images, sizes, prices and ShipHero kits',
+        'Each company gets its own page and earns on every sale'
+      ]
+    }
+  ],
 
   /* ---- Ordering ---------------------------------------------
      This site takes NO money. It builds a request list the

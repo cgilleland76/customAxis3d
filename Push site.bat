@@ -1,7 +1,7 @@
 @echo off
 REM Commit, stamp a build version, and push. Netlify builds on push.
 cd /d "%~dp0"
-title Axis3D - push site
+title Third Axis Customs - push site
 
 if exist ".git\index.lock" del /q ".git\index.lock"
 

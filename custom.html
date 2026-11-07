@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Custom Designs</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bebas+Neue&family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@600;700&family=Pacifico&family=Righteous&family=Great+Vibes&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@700;800&family=Bebas+Neue&family=Playfair+Display:wght@700;900&family=Dancing+Script:wght@600;700&family=Pacifico&family=Righteous&family=Great+Vibes&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="assets/img/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/brand/favicon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#16181D">
 <style>
   .typepick{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:9px;margin-bottom:20px}
   .typepick button{
@@ -14,10 +18,10 @@
   }
   .typepick button .big{display:block;font-size:20px;margin-bottom:6px;line-height:1}
   .typepick button:hover{border-color:var(--border2);color:var(--text)}
-  .typepick button.on{border-color:var(--accent);background:rgba(77,182,172,.09);color:var(--accent)}
+  .typepick button.on{border-color:var(--accent);background:rgba(255,90,31,.09);color:var(--accent)}
   #stage{
     background:
-      radial-gradient(circle at 30% 20%,rgba(77,182,172,.07),transparent 60%),
+      radial-gradient(circle at 30% 20%,rgba(255,90,31,.07),transparent 60%),
       repeating-conic-gradient(from 0deg at 50% 50%,#171c23 0% 25%,#1b2129 0% 50%) 0 0/26px 26px;
     border:1px solid var(--border);border-radius:var(--r);
     display:grid;place-items:center;padding:22px;min-height:340px;position:relative;overflow:hidden;
@@ -37,7 +41,7 @@
   .est .box.hi .v{color:var(--accent2)}
 </style>
 </head>
-<body>
+<body data-side="print">
 <header class="site"></header>
 
 <main class="wrap section-sm">

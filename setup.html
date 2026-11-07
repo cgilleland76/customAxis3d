@@ -5,14 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Storage Setup</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="assets/img/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/brand/favicon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#16181D">
 <style>
   .step{border:1px solid var(--border);border-radius:var(--r);background:var(--panel);margin-bottom:16px;overflow:hidden}
   .step > .h{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--border)}
   .step > .h .n{width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
     font-family:var(--mono);font-size:12px;background:var(--panel3);color:var(--muted);border:1px solid var(--border2)}
-  .step.done > .h .n{background:rgba(77,182,172,.16);border-color:var(--accent);color:var(--accent)}
+  .step.done > .h .n{background:rgba(255,90,31,.16);border-color:var(--accent);color:var(--accent)}
   .step > .h h3{font-size:15.5px;flex:1}
   .step > .b{padding:18px}
   .sql{background:#0d1117;border:1px solid var(--border);border-radius:var(--r-sm);padding:13px;
@@ -32,7 +36,7 @@
   .tbl-state .row .msg{color:var(--muted);font-size:12px;margin-left:auto;text-align:right}
 </style>
 </head>
-<body>
+<body data-side="print">
 <header class="site"></header>
 
 <main class="wrap section-sm" style="max-width:840px">
