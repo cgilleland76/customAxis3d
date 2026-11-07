@@ -2,6 +2,22 @@
 
 One entry per Cowork session. Newest first. Keep it to what changed and why.
 
+## 2026-11-07 — Third Axis Customs rebrand, Apps / 3D Printing split
+
+- New logo everywhere: the axis mark from the Oct 2026 logo kit in the header,
+  footer and favicon (`assets/img/brand/`). Palette and type switched to the
+  kit's graphite / off-white / filament orange with Space Grotesk + JetBrains Mono.
+- Home page now filters between **Apps** and **3D Printing** (plus Everything).
+  `/apps` and `/3d-printing` are Netlify rewrites to the home page, so each half
+  has its own link. App visitors see no print content and vice versa.
+- Header shows Apps | 3D Printing tabs; the print links and My List only appear
+  on the print side. Print pages carry `<body data-side="print">`.
+- Apps live in `config.js` → `apps` (name, url, tagline, points). App support
+  email is `contact.appsEmail`.
+- Fixed: hero blurb was picking up the catalog lead-time `.lead` box, and
+  `.section`/`.hero` padding wiped the side gutters on phones.
+- localStorage namespace stays `axis3d` so existing customer lists survive.
+
 ## 2026-08-14 (later) — Generator toolchain, part one
 
 Rebuilding the model generators as standalone scripts so a request turns into a

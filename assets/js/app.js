@@ -730,48 +730,100 @@
     return words.join(' ');
   }
 
-  function renderChrome() {
-    var here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  /* The logo mark from the Third Axis Customs kit: CAD-style axis gizmo,
+     Z built from orange print layers. viewBox matches the kit's SVGs. */
+  function markSVG(axes) {
+    axes = axes || '#8A8F98';
+    var acc = '#FF5A1F', g = '';
+    g += '<rect x="28" y="159" width="134" height="12" fill="' + axes + '"/>';
+    g += '<path d="M184 165 L160 150 L160 180 Z" fill="' + axes + '"/>';
+    g += '<path d="M52 159 L113 113" stroke="' + axes + '" stroke-width="10" fill="none"/>';
+    g += '<path d="M131 94 L120 119 L104 98 Z" fill="' + axes + '"/>';
+    [147, 133, 119, 105, 91, 77, 63].forEach(function (y) {
+      g += '<rect x="28" y="' + y + '" width="24" height="10" fill="' + acc + '"/>';
+    });
+    g += '<path d="M40 25 L56 59 L24 59 Z" fill="' + acc + '"/>';
+    return '<svg viewBox="0 0 200 200" aria-hidden="true">' + g + '</svg>';
+  }
 
+  /* Which half of the business a page belongs to. Pages declare it with
+     <body data-side="apps|print">; the home page sets it from its filter.
+     The header only shows links for the side you are on, so an app visitor
+     never wades through print links and vice versa. */
+  var side = (document.body && document.body.getAttribute('data-side')) || 'all';
+
+  function renderHeader() {
+    var here = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
     var head = $('header.site');
-    if (head) {
-      head.innerHTML =
-        '<div class="nav">' +
-          '<a class="logo" href="index.html"><span class="mark">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="#08191a" stroke-width="2.1" stroke-linejoin="round" stroke-linecap="round">' +
-            '<path d="M12 2.6 21 7.4v9.2L12 21.4 3 16.6V7.4z"/><path d="M3 7.4l9 4.8 9-4.8"/><path d="M12 12.2v9.2"/></svg>' +
-          '</span><span>' + esc(CFG.brand || 'AXIS3D') + '<small>' + esc(shortTagline(CFG.tagline)) + '</small></span></a>' +
-          '<button class="burger" id="burger" aria-label="Menu">☰</button>' +
-          '<nav class="links" id="navlinks">' +
-            NAVLINKS.map(function (l) {
-              return '<a href="' + l.href + '"' + (here === l.href ? ' class="active"' : '') + '>' + esc(l.label) + '</a>';
-            }).join('') +
-            '<a class="pill" href="list.html">My List <span class="count" data-list-count>0</span></a>' +
-          '</nav>' +
-        '</div>';
-      var b = $('#burger');
-      if (b) b.addEventListener('click', function () { $('#navlinks').classList.toggle('open'); });
-    }
+    if (!head) return;
+    var onPrint = side === 'print';
+    var sideTab = function (key, href, label) {
+      return '<a class="side-tab' + (side === key ? ' active' : '') + '" href="' + href + '" data-side-link="' + key + '">' + label + '</a>';
+    };
+    head.innerHTML =
+      '<div class="nav">' +
+        '<a class="logo" href="index.html" aria-label="' + esc(CFG.brand) + ' home"><span class="mark">' + markSVG() + '</span>' +
+          '<span class="word">Third Axis<small>Customs</small></span></a>' +
+        '<nav class="sides" aria-label="Sections">' +
+          sideTab('apps', 'apps', 'Apps') + sideTab('print', '3d-printing', '3D Printing') +
+        '</nav>' +
+        '<button class="burger" id="burger" aria-label="Menu"' + (onPrint ? '' : ' hidden') + '>☰</button>' +
+        (onPrint
+          ? '<nav class="links" id="navlinks">' +
+              NAVLINKS.map(function (l) {
+                return '<a href="' + l.href + '"' + (here === l.href ? ' class="active"' : '') + '>' + esc(l.label) + '</a>';
+              }).join('') +
+              '<a class="pill" href="list.html">My List <span class="count" data-list-count>0</span></a>' +
+            '</nav>'
+          : '') +
+      '</div>';
+    var b = $('#burger');
+    if (b) b.addEventListener('click', function () { var n = $('#navlinks'); if (n) n.classList.toggle('open'); });
+    // Home-page tabs filter in place instead of reloading.
+    $$('[data-side-link]', head).forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        if (typeof global.APP_onSideLink === 'function' && global.APP_onSideLink(a.getAttribute('data-side-link'))) e.preventDefault();
+      });
+    });
+    List.refresh();
+  }
+
+  function setSide(s) {
+    side = s || 'all';
+    if (document.body) document.body.setAttribute('data-side', side);
+    renderHeader();
+  }
+
+  function renderChrome() {
+    side = (document.body && document.body.getAttribute('data-side')) || side;
+    renderHeader();
 
     var foot = $('footer.site');
     if (foot) {
       var c = CFG.contact || {};
+      var apps = CFG.apps || [];
       foot.innerHTML =
         '<div class="wrap"><div class="cols">' +
-          '<div><h4>' + esc(CFG.brand || 'AXIS3D') + '</h4>' +
-            '<p style="max-width:44ch">' + esc(CFG.blurb || '') + '</p>' +
-            '<p class="mono dim" style="margin-top:10px;font-size:11.5px">' + esc(CFG.orderNote || '') + '</p></div>' +
-          '<div><h4>Browse</h4>' +
+          '<div><a class="logo foot-logo" href="index.html"><span class="mark">' + markSVG() + '</span>' +
+            '<span class="word">Third Axis<small>Customs</small></span></a>' +
+            '<p style="max-width:44ch;margin-top:12px">' + esc(CFG.blurb || '') + '</p></div>' +
+          '<div><h4>Apps</h4>' +
+            apps.map(function (a) { return '<a href="' + esc(a.url) + '">' + esc(a.name) + '</a>'; }).join('') +
+            (c.appsEmail ? '<a href="mailto:' + esc(c.appsEmail) + '">App support</a>' : '') + '</div>' +
+          '<div><h4>3D Printing</h4>' +
             NAVLINKS.map(function (l) { return '<a href="' + l.href + '">' + esc(l.label) + '</a>'; }).join('') +
             '<a href="list.html">My List</a></div>' +
           '<div><h4>Contact</h4>' +
             (c.phone ? '<a href="tel:' + esc(c.phone.replace(/[^\d+]/g, '')) + '">' + esc(c.phone) + '</a>' : '') +
+            (c.appsEmail ? '<a href="mailto:' + esc(c.appsEmail) + '">' + esc(c.appsEmail) + '</a>' : '') +
             (c.email ? '<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>' : '') +
             (c.location ? '<p>' + esc(c.location) + '</p>' : '') +
             (c.hours ? '<p>' + esc(c.hours) + '</p>' : '') +
           '</div>' +
-        '</div><div class="legal">' +
-          '<span>© ' + new Date().getFullYear() + ' ' + esc(CFG.brand || 'AXIS3D') + '</span>' +
+        '</div>' +
+        '<p class="mono dim" style="margin-top:18px;font-size:11.5px">' + esc(CFG.orderNote || '') + '</p>' +
+        '<div class="legal">' +
+          '<span>© ' + new Date().getFullYear() + ' ' + esc(CFG.legalName || CFG.brand) + '</span>' +
           '<span id="dbmode" class="badge-live off"><i></i>storage: local</span>' +
           '<span class="chip amber hide" data-outbox-count title="Items saved here but not yet uploaded. They retry automatically.">0</span>' +
           '<span class="chip mono build" title="When this version of the site was pushed. Compare with the time you pushed to confirm the deploy landed.">' +
@@ -929,7 +981,7 @@
     Products: Products, Filaments: Filaments, Requests: Requests, Quotes: Quotes, Rates: Rates, List: List, Auth: Auth,
     Settings: Settings, Bands: Bands, Categories: Categories, slug: slug,
     Setup: Setup, Outbox: Outbox, lastError: function () { return LAST_ERROR; },
-    lightbox: lightbox, downloadCSV: downloadCSV, renderChrome: renderChrome, gate: gate,
+    lightbox: lightbox, downloadCSV: downloadCSV, renderChrome: renderChrome, gate: gate, setSide: setSide, markSVG: markSVG,
     SEED_PRODUCTS: SEED_PRODUCTS
   };
 

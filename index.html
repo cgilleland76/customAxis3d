@@ -3,28 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AXIS3D — 3D Printing & Custom Fabrication</title>
-<meta name="description" content="Ready-made 3D prints, custom designs, and instant quotes from real slicer data. Orders arranged in person.">
+<title>Third Axis Customs — Shopify Apps & Custom 3D Printing</title>
+<meta name="description" content="Third Axis Customs builds Shopify apps for e-commerce teams and prints custom parts and gifts in Bowling Green, KY.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="assets/img/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/img/brand/favicon-64.png" sizes="64x64">
+<link rel="apple-touch-icon" href="assets/img/brand/apple-touch-icon.png">
+<meta name="theme-color" content="#16181D">
 </head>
-<body>
+<body data-side="all">
 <header class="site"></header>
 
 <main>
   <!-- ================= HERO ================= -->
   <section class="wrap hero">
-    <span class="eyebrow"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)"></span> Now taking orders in person</span>
-    <h1>Parts and gifts, <em>printed on demand</em>.</h1>
+    <span class="eyebrow"><span class="dot"></span> <span id="heroEyebrow">Third Axis Customs</span></span>
+    <h1 id="heroTitle">Software for Shopify stores. <em>Prints for everything else.</em></h1>
     <p class="lead" id="heroBlurb"></p>
-    <div class="cta">
-      <a class="btn" href="shop.html">Browse ready-made →</a>
-      <a class="btn ghost" href="custom.html">Design something custom</a>
-      <a class="btn ghost" href="idea.html">Describe an idea</a>
+
+    <div class="side-filter" role="tablist" aria-label="Show">
+      <button type="button" role="tab" data-filter="all">Everything</button>
+      <button type="button" role="tab" data-filter="apps"><span class="sf-ico" aria-hidden="true">⌘</span> Apps</button>
+      <button type="button" role="tab" data-filter="print"><span class="sf-ico" aria-hidden="true">▦</span> 3D Printing</button>
     </div>
-    <div class="rowflex" style="margin-top:30px">
+  </section>
+
+  <!-- ================= APPS ================= -->
+  <div data-show="apps">
+    <section class="wrap section-sm" id="apps">
+      <div class="sec-head">
+        <div>
+          <span class="kicker">Apps</span>
+          <h2>Software for e-commerce teams</h2>
+          <p id="appsBlurb"></p>
+        </div>
+      </div>
+      <div class="apps" id="appGrid"></div>
+      <div class="panel app-cta">
+        <div>
+          <h3>Need a tool your store doesn't have?</h3>
+          <p class="muted">I build custom Shopify apps and integrations — syncs, bulk edits, warehouse connections. Tell me the problem.</p>
+        </div>
+        <a class="btn" id="appsMail" href="#">Email me →</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= 3D PRINTING ================= -->
+  <div data-show="print" id="print">
+  <section class="wrap section-sm print-intro">
+    <div class="sec-head">
+      <div>
+        <span class="kicker">3D Printing</span>
+        <h2>Parts and gifts, printed on demand</h2>
+        <p id="printBlurb"></p>
+      </div>
+    </div>
+    <div class="rowflex">
       <span class="chip">PLA · PETG · TPU · ABS</span>
       <span class="chip">0.4 mm nozzle · 0.12–0.28 mm layers</span>
       <span class="chip">Multi-color AMS</span>
@@ -118,6 +156,7 @@
       </div>
     </div>
   </section>
+  </div>
 </main>
 
 <footer class="site"></footer>
@@ -127,10 +166,85 @@
 <script src="assets/js/app.js"></script>
 <script>
 (function () {
-  var A = window.APP;
-  A.$('#heroBlurb').textContent = A.cfg.blurb || '';
-  document.title = (A.cfg.brand || 'AXIS3D') + ' — ' + (A.cfg.tagline || '3D Printing');
+  var A = window.APP, C = A.cfg;
 
+  /* ---------- Apps / 3D Printing filter ----------
+     /apps and /3d-printing are Netlify rewrites to this page (netlify.toml),
+     so each half has its own shareable link. #apps / #print work too. */
+  var COPY = {
+    all:   { eyebrow: 'Third Axis Customs', title: 'Software for Shopify stores. <em>Prints for everything else.</em>',
+             lead: C.blurb, doc: C.brand + ' — Shopify Apps & Custom 3D Printing', path: './' },
+    apps:  { eyebrow: 'Apps', title: 'Shopify apps that <em>fix real catalog problems</em>.',
+             lead: C.appsBlurb, doc: 'Shopify Apps — ' + C.brand, path: 'apps' },
+    print: { eyebrow: 'Now taking orders in person', title: 'Parts and gifts, <em>printed on demand</em>.',
+             lead: C.printBlurb, doc: '3D Printing — ' + C.brand, path: '3d-printing' }
+  };
+
+  function fromUrl() {
+    var p = location.pathname.toLowerCase(), h = location.hash.toLowerCase();
+    if (/\/apps\/?$/.test(p) || h === '#apps') return 'apps';
+    if (/\/3d-printing\/?$/.test(p) || h === '#print' || h === '#3d-printing') return 'print';
+    return 'all';
+  }
+
+  function setFilter(key, push) {
+    var c = COPY[key] || COPY.all;
+    A.setSide(key);
+    A.$('#heroEyebrow').textContent = c.eyebrow;
+    A.$('#heroTitle').innerHTML = c.title;
+    A.$('#heroBlurb').textContent = c.lead || '';
+    document.title = c.doc;
+    A.$$('.side-filter [data-filter]').forEach(function (b) {
+      var on = b.getAttribute('data-filter') === key;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    if (push && window.history && history.replaceState) {
+      try { history.replaceState(null, '', c.path); } catch (e) { /* file:// */ }
+    }
+  }
+
+  A.$$('.side-filter [data-filter]').forEach(function (b) {
+    b.addEventListener('click', function () { setFilter(b.getAttribute('data-filter'), true); });
+  });
+  // Header "Apps" / "3D Printing" tabs filter in place on this page.
+  window.APP_onSideLink = function (key) {
+    setFilter(key, true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
+  };
+  window.addEventListener('hashchange', function () { setFilter(fromUrl(), false); });
+
+  /* ---------- Apps ---------- */
+  A.$('#appsBlurb').textContent = C.appsBlurb || '';
+  A.$('#printBlurb').textContent = C.printBlurb || '';
+  var mail = (C.contact && (C.contact.appsEmail || C.contact.email)) || '';
+  if (mail) A.$('#appsMail').href = 'mailto:' + mail + '?subject=' + encodeURIComponent('Custom app request');
+  else A.$('#appsMail').classList.add('hide');
+
+  function initials(name) {
+    var words = String(name).split(/\s+/).filter(function (w) { return /^[A-Za-z]/.test(w); });
+    if (words.length === 1) {               // "KitForge" -> "KF"
+      var caps = words[0].replace(/[^A-Z]/g, '');
+      return (caps.length >= 2 ? caps : words[0].slice(0, 2)).slice(0, 2).toUpperCase();
+    }
+    return words.slice(-2).map(function (w) { return w[0]; }).join('').toUpperCase();
+  }
+  A.$('#appGrid').innerHTML = (C.apps || []).map(function (a) {
+    var host = String(a.url || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return '<article class="app-card">' +
+      '<div class="app-top"><span class="app-ico">' + A.esc(initials(a.name)) + '</span>' +
+        '<span class="chip mono">' + A.esc(a.platform || 'App') + '</span></div>' +
+      '<h3>' + A.esc(a.name) + '</h3>' +
+      '<p class="app-tag">' + A.esc(a.tagline || '') + '</p>' +
+      '<ul class="app-points">' + (a.points || []).map(function (p) { return '<li>' + A.esc(p) + '</li>'; }).join('') + '</ul>' +
+      '<a class="btn ghost block" href="' + A.esc(a.url) + '">Visit ' + A.esc(host) + ' →</a>' +
+    '</article>';
+  }).join('');
+
+  setFilter(fromUrl(), false);
+
+  /* ---------- Featured prints ---------- */
   A.Products.list().then(function (all) {
     // Drafts never belong on the home page, even for a signed-in owner.
     all = all.filter(function (p) { return (p.status || 'published') === 'published'; });

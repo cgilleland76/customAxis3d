@@ -62,3 +62,13 @@
   from = "/setup"
   to = "/setup.html"
   status = 200
+
+# Home page filter: each half of the business gets its own shareable link.
+[[redirects]]
+  from = "/apps"
+  to = "/index.html"
+  status = 200
+[[redirects]]
+  from = "/3d-printing"
+  to = "/index.html"
+  status = 200
